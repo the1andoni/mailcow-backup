@@ -59,7 +59,7 @@ mailcow-backup/
    Sie können das Repository mithilfe von Git Clone einfach runterladen.
 
    ```bash
-   git clone https://github.com/the1andoni/mailcow-backup.git 
+   git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git 
    ```
    
    Scripts will automatically be made executable during setup.
@@ -327,7 +327,7 @@ mailcow-backup/
 1. **Repository herunterladen**:
 
    ```bash
-   git clone https://github.com/the1andoni/mailcow-backup.git 
+   git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
    cd mailcow-backup
    ```
    
