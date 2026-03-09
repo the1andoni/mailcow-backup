@@ -42,7 +42,7 @@ Mailcow-BackupV2/
    Sie können das Repository mithilfe von GitClone einfach runterladen.
 
    ```bash
-   git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backupV2.git 
+   git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backupV2.git
    ```
    
    Anschließend wechseln Sie in das neue Verzeichnis und machen die Scripte mithilfe folgendes Befehles ausführbar.
@@ -94,6 +94,19 @@ Mailcow-BackupV2/
   ```bash
   sudo ./Upload/FTP-Upload.sh
   ```
+
+## Hinweis zu Updates (Legacy)
+
+Die `V2-Legacy`-Version enthielt urspruenglich kein `update.sh`.
+
+Wenn Sie auf dieser Legacy-Version bleiben, koennen Sie das Script bei Bedarf manuell aus der aktuellen Version herunterladen und danach ausfuehrbar machen:
+
+```bash
+wget -O update.sh https://raw.githubusercontent.com/the1andoni/mailcow-backupV2/main/update.sh
+chmod +x update.sh
+```
+
+Alternativ koennen Sie Updates weiterhin klassisch ueber `git pull` einspielen, wenn das Repository per Git geklont wurde.
 
 ## Konfiguration
 
