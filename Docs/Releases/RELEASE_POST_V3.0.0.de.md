@@ -1,22 +1,22 @@
 # mailcow Backup Script v3.0.0 - Major Release (Deutsch)
 
-Ich freue mich, **mailcow Backup Script v3.0.0** zu veroeffentlichen.
+Ich freue mich, **mailcow Backup Script v3.0.0** zu veröffentlichen.
 Dieses Major-Release bringt Internationalisierung, neue Upload-Ziele und ein sichereres Update-Setup.
 
 ## Highlights
 
-- Internationalisierte Skripte und Ausgaben fuer bessere Zusammenarbeit
+- Internationalisierte Skripte und Ausgaben für bessere Zusammenarbeit
 - Bilinguale Dokumentation (Deutsch und Englisch)
 - Neue Upload-Methoden: NAS und S3-kompatible Provider
 - Two-Phase-Update: erst Selbst-Update, dann komplettes Repository-Update
 - Automatische Reparatur von systemd-Service-Pfaden nach Updates
-- Verbesserte Dependency-Pruefung mit optionaler Installation
+- Verbesserte Dependency-Prüfung mit optionaler Installation
 
-## Wichtige Aenderungen
+## Wichtige Änderungen
 
 ### Neue Features
 
-- NAS-Upload fuer gemountete SMB/CIFS- und NFS-Pfade
+- NAS-Upload für gemountete SMB/CIFS- und NFS-Pfade
 - S3-Upload via AWS CLI (AWS S3 und S3-kompatible Dienste)
 - Branch-aware Update-Verhalten mit stabiler/development Trennung
 - Status-Flag-Workflow, damit Uploads nur nach erfolgreichem Backup starten
@@ -35,12 +35,12 @@ Dieses Major-Release bringt Internationalisierung, neue Upload-Ziele und ein sic
 
 ## Upgrade von V2 auf V3
 
-Wichtiger Hinweis: In der urspruenglichen V2-Branch gab es keine `update.sh`.
-Deshalb ist fuer alte V2-Installationen ein Bootstrap-Schritt noetig, bevor ein Branch-Upgrade per Flag moeglich ist.
+Wichtiger Hinweis: In der ursprünglichen V2-Branch gab es keine `update.sh`.
+Deshalb ist für alte V2-Installationen ein Bootstrap-Schritt nötig, bevor ein Branch-Upgrade per Flag möglich ist.
 
-Danach holt `git pull` grundsaetzlich auch neue Dateien. Ein manuelles Kopieren ist dann normalerweise nicht mehr noetig.
+Danach holt `git pull` grundsätzlich auch neue Dateien. Ein manuelles Kopieren ist dann normalerweise nicht mehr nötig.
 
-Einmaliger Bootstrap fuer V2-Installationen ohne `update.sh`:
+Einmaliger Bootstrap für V2-Installationen ohne `update.sh`:
 
 ```bash
 cd /root/mailcow-backup
@@ -49,14 +49,14 @@ chmod +x update.sh
 sudo ./update.sh --v3
 ```
 
-Alternative (sauberster Weg): Neu klonen und Konfiguration uebernehmen:
+Alternative (sauberster Weg): Neu klonen und Konfiguration übernehmen:
 
 ```bash
 git clone -b V3 https://github.com/the1andoni/mailcow-backup.git mailcow-backup-v3
 cd mailcow-backup-v3
 ```
 
-## Unterstuetzte Upload-Ziele
+## Unterstützte Upload-Ziele
 
 - WebDAV (z. B. Nextcloud, ownCloud, HiDrive)
 - FTP/SFTP

@@ -20,3 +20,6 @@ backups/
 *.key
 *.pub
 *.pem
+
+# --- Lokale Wiki-Quellen ---
+Docs/Wiki/
