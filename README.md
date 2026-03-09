@@ -5,17 +5,17 @@ Ein Bash-Skript zur Sicherung von Mailcow-Daten mit Unterstützung für WebDAV- 
 ## Ordnerstruktur
 
 ```
-Mailcow-BackupV2/
+mailcow-backup/
 ├── mailcow-backup.sh
 ├── setup.sh
 ├── Dependencies/
-│   ├── Dependencies/dependencies.txt
-│   └── Dependencies/install_dependencies.sh
+│   ├── dependencies.txt
+│   └── install_dependencies.sh
 ├── Configs/
 │   └── (verschlüsselte Konfigurationsdateien)
 └── Upload/  
-     ├── Upload/FTP-Upload.sh  
-     └── Upload/WebDAV-Upload.sh
+     ├── FTP-Upload.sh  
+     └── WebDAV-Upload.sh
 ```
 
 ## Features
@@ -39,16 +39,16 @@ Mailcow-BackupV2/
 
 1. **Download Repository**:
 
-   Sie können das Repository mithilfe von GitClone einfach runterladen.
+   Sie können das Repository mithilfe von Git Clone einfach runterladen.
 
    ```bash
-   git clone https://github.com/the1andoni/mailcow-backupV2.git 
+   git clone https://github.com/the1andoni/mailcow-backup.git 
    ```
    
    Anschließend wechseln Sie in das neue Verzeichnis und machen die Scripte mithilfe folgendes Befehles ausführbar.
 
    ```bash
-   chmod +x Mailcow-BackupV2/**/*.sh
+   chmod +x mailcow-backup/**/*.sh
    ```
 
 2. **Abhängigkeiten installieren**:
