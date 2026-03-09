@@ -1,0 +1,6 @@
+gpg
+curl
+cron
+tar
+
+
