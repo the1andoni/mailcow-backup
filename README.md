@@ -119,6 +119,7 @@ This repository uses multiple branches for different stability levels:
 **For production systems, always use the `V3` branch or tagged releases (`v3.0.0`, `v3.1.0`, etc.).**
 
 Already on a different branch? You can switch during update with `sudo ./update.sh --v3`.
+This also supports switching back from `main` to the stable `V3` track.
 
 **Clone instructions:**
 ```bash
@@ -180,7 +181,8 @@ The backup script automatically reads this password and decrypts the configurati
 
   **Downgrade protection:**
   - Allowed upgrade path: `V2-LEGACY -> V3 -> main`
-  - Downgrades are blocked (for example `V3 -> V2-LEGACY`)
+  - Downgrades are blocked by default (for example `V3 -> V2-LEGACY`)
+  - Allowed downgrade exception: `main -> V3` (with confirmation prompt)
 
   The update script:
   - Shows changes in update.sh first (Phase 1)
@@ -417,6 +419,7 @@ Dieses Repository verwendet mehrere Branches für unterschiedliche Stabilitätss
 **Für Produktivsysteme sollte immer der `V3`-Branch oder getaggte Releases (`v3.0.0`, `v3.1.0`, etc.) verwendet werden.**
 
 Bereits auf einem anderen Branch? Der Wechsel ist beim Update mit `sudo ./update.sh --v3` möglich.
+Das schließt auch den Wechsel zurück von `main` auf den stabilen `V3`-Track ein.
 
 **Clone-Anweisungen:**
 ```bash
@@ -478,7 +481,8 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
 
   **Downgrade-Schutz:**
   - Erlaubter Upgrade-Pfad: `V2-LEGACY -> V3 -> main`
-  - Downgrades sind blockiert (z. B. `V3 -> V2-LEGACY`)
+  - Downgrades sind standardmäßig blockiert (z. B. `V3 -> V2-LEGACY`)
+  - Erlaubte Downgrade-Ausnahme: `main -> V3` (mit Sicherheitsabfrage)
 
   Das Update-Skript:
   - Zeigt zuerst Änderungen in update.sh (Phase 1)
