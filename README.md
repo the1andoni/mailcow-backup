@@ -42,7 +42,7 @@ Mailcow-BackupV2/
    Sie können das Repository mithilfe von GitClone einfach runterladen.
 
    ```bash
-   git clone https://github.com/the1andoni/mailcow-backupV2.git 
+   git clone -b V2-Legacy https://github.com/the1andoni/mailcow-backupV2.git 
    ```
    
    Anschließend wechseln Sie in das neue Verzeichnis und machen die Scripte mithilfe folgendes Befehles ausführbar.
