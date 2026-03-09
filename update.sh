@@ -5,8 +5,67 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
 
 # Flags for self-update and stash status
-SELF_UPDATE_DONE="${1:-}"
-STASH_WAS_CREATED="${2:-false}"
+SELF_UPDATE_DONE=""
+STASH_WAS_CREATED="false"
+TARGET_BRANCH=""
+
+# Function: Show usage information
+show_usage() {
+    echo "Usage: $0 [--main|--v3|--v2] [--help]"
+    echo ""
+    echo "Version flags:"
+    echo "  --main    Switch/update to main branch"
+    echo "  --v3      Switch/update to V3 branch"
+    echo "  --v2      Switch/update to V2-LEGACY branch"
+    echo ""
+    echo "Rules:"
+    echo "  - Upgrades are allowed (V2-LEGACY -> V3 -> main)"
+    echo "  - Downgrades are blocked (for example V3 -> V2-LEGACY)"
+}
+
+# Function: Map branch names to version ranks
+branch_rank() {
+    case "$1" in
+        "V2-LEGACY") echo 1 ;;
+        "V3") echo 2 ;;
+        "main") echo 3 ;;
+        *) echo 0 ;;
+    esac
+}
+
+# Parse arguments
+for arg in "$@"; do
+    case "$arg" in
+        --main|main)
+            TARGET_BRANCH="main"
+            ;;
+        --v3|V3|v3)
+            TARGET_BRANCH="V3"
+            ;;
+        --v2|V2|v2)
+            TARGET_BRANCH="V2-LEGACY"
+            ;;
+        --self-updated)
+            SELF_UPDATE_DONE="--self-updated"
+            ;;
+        --stash-created=true)
+            STASH_WAS_CREATED="true"
+            ;;
+        --stash-created=false)
+            STASH_WAS_CREATED="false"
+            ;;
+        --help|-h)
+            show_usage
+            exit 0
+            ;;
+        *)
+            echo "Error: Unknown argument '$arg'"
+            echo ""
+            show_usage
+            exit 1
+            ;;
+    esac
+done
 
 # Function: Check and repair systemd files
 repair_systemd_services() {
@@ -94,6 +153,21 @@ fi
 
 echo "Current branch: $CURRENT_BRANCH"
 
+# Requested branch switch (optional)
+if [ -n "$TARGET_BRANCH" ] && [ "$TARGET_BRANCH" != "$CURRENT_BRANCH" ]; then
+    CURRENT_RANK=$(branch_rank "$CURRENT_BRANCH")
+    TARGET_RANK=$(branch_rank "$TARGET_BRANCH")
+
+    # Block downgrades between known release branches
+    if [ "$CURRENT_RANK" -gt 0 ] && [ "$TARGET_RANK" -gt 0 ] && [ "$TARGET_RANK" -lt "$CURRENT_RANK" ]; then
+        echo "Error: Downgrade not allowed: $CURRENT_BRANCH -> $TARGET_BRANCH"
+        echo "Allowed upgrade path: V2-LEGACY -> V3 -> main"
+        exit 1
+    fi
+
+    echo "Requested target branch: $TARGET_BRANCH"
+fi
+
 # Show branch-specific information
 case "$CURRENT_BRANCH" in
     main)
@@ -134,6 +208,35 @@ else
     else
         echo "No local changes found."
     fi
+fi
+
+# Optional branch switch after stash handling
+if [ -n "$TARGET_BRANCH" ] && [ "$TARGET_BRANCH" != "$CURRENT_BRANCH" ]; then
+    echo "Switching branch: $CURRENT_BRANCH -> $TARGET_BRANCH"
+    git fetch origin "$TARGET_BRANCH" &>/dev/null
+
+    if git show-ref --verify --quiet "refs/heads/$TARGET_BRANCH"; then
+        if ! git checkout "$TARGET_BRANCH" &>/dev/null; then
+            echo "Error: Could not switch to branch '$TARGET_BRANCH'."
+            if [ "$STASH_CREATED" = true ]; then
+                echo "Restoring local changes..."
+                git stash pop &>/dev/null
+            fi
+            exit 1
+        fi
+    else
+        if ! git checkout -b "$TARGET_BRANCH" "origin/$TARGET_BRANCH" &>/dev/null; then
+            echo "Error: Branch '$TARGET_BRANCH' not found on origin."
+            if [ "$STASH_CREATED" = true ]; then
+                echo "Restoring local changes..."
+                git stash pop &>/dev/null
+            fi
+            exit 1
+        fi
+    fi
+
+    CURRENT_BRANCH="$TARGET_BRANCH"
+    echo "✓ Now on branch: $CURRENT_BRANCH"
 fi
 
 # 3. Fetch remote info
@@ -188,7 +291,7 @@ if [ "$SELF_UPDATE_DONE" != "--self-updated" ]; then
         echo ""
         
         # Restart script with flags (pass stash info)
-        exec bash "$REPO_DIR/update.sh" "--self-updated" "$STASH_CREATED"
+        exec bash "$REPO_DIR/update.sh" "--self-updated" "--stash-created=$STASH_CREATED"
     fi
 fi
 
