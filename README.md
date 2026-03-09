@@ -60,7 +60,7 @@ mailcow-backup/
 1. **Download Repository**:
 
    ```bash
-   git clone -b V3 https://github.com/the1andoni/mailcow-backup.git 
+   git clone https://github.com/the1andoni/mailcow-backup.git 
    cd mailcow-backup
    ```
    
@@ -102,30 +102,38 @@ mailcow-backup/
    - Sets up systemd timers for automated backups
 
 ### 🌿 Branch Strategy
-
-**You are on the `V3` branch - the stable release track.**
+**You are on the `Main` branch - the Brach with the newest Features.**
 
 This repository uses multiple branches for different stability levels:
 
 | Branch | Purpose | Stability | For Production Use |
 |--------|---------|-----------|-------------------|
 | `main` | Active development, new features | ⚠️ May be unstable | ❌ No |
-| `V3` | **Stable release track (v3.x)** | ✅ Stable | ✅ **Yes** |
+| `V3` | Stable release track (v3.x) | ✅ Stable | ✅ **Yes** |
 | `V2-LEGACY` | Legacy support (v2.x) | ✅ Stable | ⚠️ Legacy only |
 
-**For production systems, always use the `V3` branch (this branch) or tagged releases (`v3.0.0`, `v3.1.0`, etc.).**
+**For production systems, always use the `V3` branch or tagged releases (`v3.0.0`, `v3.1.0`, etc.).**
+
+Already on a different branch? You can switch during update with `sudo ./update.sh --v3`.
 
 **Clone instructions:**
 ```bash
-# Stable production version (recommended) - THIS BRANCH
+# Stable production version (recommended)
 git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
 
 # Development version (may be unstable)
+git clone https://github.com/the1andoni/mailcow-backup.git
+# or explicitly:
 git clone -b main https://github.com/the1andoni/mailcow-backup.git
 
 # Legacy v2 version
 git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 ```
+
+**Development workflow:**
+- New features → `main` branch
+- Stable releases → pushed to `V3` after testing
+- Critical bugfixes → `V3` or `V2-LEGACY` directly
 
 ### 🔐 Automated Backups & GPG Password
 
@@ -148,6 +156,23 @@ The backup script automatically reads this password and decrypts the configurati
   ```bash
   sudo ./update.sh
   ```
+
+  **Switch release track during update:**
+
+  ```bash
+  # Switch/update to main (development)
+  sudo ./update.sh --main
+
+  # Switch/update to V3 (stable)
+  sudo ./update.sh --v3
+
+  # Switch/update to V2-LEGACY (legacy)
+  sudo ./update.sh --v2
+  ```
+
+  **Downgrade protection:**
+  - Allowed upgrade path: `V2-LEGACY -> V3 -> main`
+  - Downgrades are blocked (for example `V3 -> V2-LEGACY`)
 
   The update script:
   - Shows changes in update.sh first (Phase 1)
@@ -324,7 +349,7 @@ mailcow-backup/
 1. **Repository herunterladen**:
 
    ```bash
-   git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
+   git clone https://github.com/the1andoni/mailcow-backup.git 
    cd mailcow-backup
    ```
    
@@ -366,30 +391,39 @@ mailcow-backup/
    - Richtet systemd-Timer für automatisierte Backups ein
 
 ### 🌿 Branch-Strategie
+**Sie befinden sich auf dem `Main` branch - den Branch mit den neusten Features.** 
 
-**Sie befinden sich auf dem `V3`-Branch - dem stabilen Release-Track.**
-
+This repository uses multiple branches for different stability levels:
 Dieses Repository verwendet mehrere Branches für unterschiedliche Stabilitätsstufen:
 
 | Branch | Zweck | Stabilität | Für Produktiv-Einsatz |
 |--------|-------|------------|----------------------|
 | `main` | Aktive Entwicklung, neue Features | ⚠️ Kann instabil sein | ❌ Nein |
-| `V3` | **Stabiler Release-Track (v3.x)** | ✅ Stabil | ✅ **Ja** |
+| `V3` | Stabiler Release-Track (v3.x) | ✅ Stabil | ✅ **Ja** |
 | `V2-LEGACY` | Legacy-Support (v2.x) | ✅ Stabil | ⚠️ Nur Legacy |
 
-**Für Produktivsysteme sollte immer der `V3`-Branch (dieser Branch) oder getaggte Releases (`v3.0.0`, `v3.1.0`, etc.) verwendet werden.**
+**Für Produktivsysteme sollte immer der `V3`-Branch oder getaggte Releases (`v3.0.0`, `v3.1.0`, etc.) verwendet werden.**
+
+Bereits auf einem anderen Branch? Der Wechsel ist beim Update mit `sudo ./update.sh --v3` möglich.
 
 **Clone-Anweisungen:**
 ```bash
-# Stabile Produktivversion (empfohlen) - DIESER BRANCH
+# Stabile Produktivversion (empfohlen)
 git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
 
 # Entwicklungsversion (kann instabil sein)
+git clone https://github.com/the1andoni/mailcow-backup.git
+# oder explizit:
 git clone -b main https://github.com/the1andoni/mailcow-backup.git
 
 # Legacy v2 Version
 git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 ```
+
+**Entwicklungs-Workflow:**
+- Neue Features → `main` Branch
+- Stabile Releases → nach Tests auf `V3` gepusht
+- Kritische Bugfixes → direkt in `V3` oder `V2-LEGACY`
 
 ### 🔐 Automatisierte Backups & GPG-Passwort
 
@@ -412,6 +446,23 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
   ```bash
   sudo ./update.sh
   ```
+
+  **Release-Track beim Update wechseln:**
+
+  ```bash
+  # Auf main wechseln/aktualisieren (Entwicklung)
+  sudo ./update.sh --main
+
+  # Auf V3 wechseln/aktualisieren (stabil)
+  sudo ./update.sh --v3
+
+  # Auf V2-LEGACY wechseln/aktualisieren (legacy)
+  sudo ./update.sh --v2
+  ```
+
+  **Downgrade-Schutz:**
+  - Erlaubter Upgrade-Pfad: `V2-LEGACY -> V3 -> main`
+  - Downgrades sind blockiert (z. B. `V3 -> V2-LEGACY`)
 
   Das Update-Skript:
   - Zeigt zuerst Änderungen in update.sh (Phase 1)
