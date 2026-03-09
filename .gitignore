@@ -4,6 +4,7 @@ Thumbs.db
 *.swp
 *~
 FETCH_HEAD
+
 # --- Benutzer-Konfigurationen (WICHTIG) ---
 configs/*.conf
 
