@@ -109,20 +109,28 @@ This repository uses multiple branches for different stability levels:
 |--------|---------|-----------|-------------------|
 | `main` | Active development, new features | ⚠️ May be unstable | ❌ No |
 | `V3` | Stable release track (v3.x) | ✅ Stable | ✅ **Yes** |
-| `v2-maintenance` | Legacy support (v2.x) | ✅ Stable | ⚠️ Legacy only |
+| `V2-LEGACY` | Legacy support (v2.x) | ✅ Stable | ⚠️ Legacy only |
 
 **For production systems, always use the `V3` branch or tagged releases (`v3.0.0`, `v3.1.0`, etc.).**
 
-**Clone stable version:**
+**Clone instructions:**
 ```bash
+# Stable production version (recommended)
 git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
-cd mailcow-backup
+
+# Development version (may be unstable)
+git clone https://github.com/the1andoni/mailcow-backup.git
+# or explicitly:
+git clone -b main https://github.com/the1andoni/mailcow-backup.git
+
+# Legacy v2 version
+git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 ```
 
 **Development workflow:**
 - New features → `main` branch
 - Stable releases → pushed to `V3` after testing
-- Critical bugfixes → `V3` or `v2-maintenance` directly
+- Critical bugfixes → `V3` or `V2-LEGACY` directly
 
 ### 🔐 Automated Backups & GPG Password
 
@@ -370,20 +378,28 @@ Dieses Repository verwendet mehrere Branches für unterschiedliche Stabilitätss
 |--------|-------|------------|----------------------|
 | `main` | Aktive Entwicklung, neue Features | ⚠️ Kann instabil sein | ❌ Nein |
 | `V3` | Stabiler Release-Track (v3.x) | ✅ Stabil | ✅ **Ja** |
-| `v2-maintenance` | Legacy-Support (v2.x) | ✅ Stabil | ⚠️ Nur Legacy |
+| `V2-LEGACY` | Legacy-Support (v2.x) | ✅ Stabil | ⚠️ Nur Legacy |
 
 **Für Produktivsysteme sollte immer der `V3`-Branch oder getaggte Releases (`v3.0.0`, `v3.1.0`, etc.) verwendet werden.**
 
-**Stabile Version klonen:**
+**Clone-Anweisungen:**
 ```bash
+# Stabile Produktivversion (empfohlen)
 git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
-cd mailcow-backup
+
+# Entwicklungsversion (kann instabil sein)
+git clone https://github.com/the1andoni/mailcow-backup.git
+# oder explizit:
+git clone -b main https://github.com/the1andoni/mailcow-backup.git
+
+# Legacy v2 Version
+git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 ```
 
 **Entwicklungs-Workflow:**
 - Neue Features → `main` Branch
 - Stabile Releases → nach Tests auf `V3` gepusht
-- Kritische Bugfixes → direkt in `V3` oder `v2-maintenance`
+- Kritische Bugfixes → direkt in `V3` oder `V2-LEGACY`
 
 ### 🔐 Automatisierte Backups & GPG-Passwort
 
