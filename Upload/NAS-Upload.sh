@@ -1,22 +1,22 @@
 #!/bin/bash
 
-# Überprüfen, ob das Skript mit sudo ausgeführt wird
+# Check if script is run with sudo
 if [ "$EUID" -ne 0 ]; then
-  echo "Bitte führen Sie dieses Skript mit sudo aus."
+  echo "Please run this script with sudo."
   exit 1
 fi
 
-# Sicherstellen, dass das Backup abgeschlossen ist
+# Ensure backup is completed
 if [ ! -f /tmp/mailcow-backup.status ]; then
-  echo "Fehler: Backup ist noch nicht abgeschlossen!"
+  echo "Error: Backup not yet completed!"
   exit 1
 fi
 
-# Benötigte Abhängigkeiten prüfen
+# Check required dependencies
 for cmd in gpg mountpoint; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "Fehler: Abhängigkeit '$cmd' fehlt."
-    echo "Bitte führen Sie 'sudo ./Dependencies/install_dependencies.sh' aus."
+    echo "Error: Dependency '$cmd' is missing."
+    echo "Please run 'sudo ./Dependencies/install_dependencies.sh'."
     exit 1
   fi
 done
@@ -24,12 +24,12 @@ done
 CONFIG_DIR="$(dirname "$0")/../Configs"
 GPG_PASS_FILE="/root/.mailcow-gpg-pass"
 if [ ! -f "$GPG_PASS_FILE" ]; then
-  echo "Fehler: GPG-Passwortdatei $GPG_PASS_FILE nicht gefunden!"
+  echo "Error: GPG password file $GPG_PASS_FILE not found!"
   exit 1
 fi
 
 if [ ! -f "$CONFIG_DIR/nas-config.sh.gpg" ]; then
-  echo "Fehler: NAS-Konfiguration $CONFIG_DIR/nas-config.sh.gpg nicht gefunden!"
+  echo "Error: NAS configuration $CONFIG_DIR/nas-config.sh.gpg not found!"
   exit 1
 fi
 
@@ -39,7 +39,7 @@ source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt 
 BACKUP_DIR="/backup/mailcow"
 LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.tar.gz 2>/dev/null | head -n 1)
 if [ -z "$LATEST_BACKUP" ] || [ ! -f "$LATEST_BACKUP" ]; then
-  echo "Fehler: Kein Backup gefunden!"
+  echo "Error: No backup found!"
   exit 1
 fi
 
@@ -50,12 +50,12 @@ if [[ "$NAS_UPLOAD_DIR" != /* ]]; then
 fi
 
 if [ ! -d "$NAS_MOUNT_PATH" ]; then
-  echo "Fehler: NAS-Mount-Pfad $NAS_MOUNT_PATH existiert nicht!"
+  echo "Error: NAS mount path $NAS_MOUNT_PATH does not exist!"
   exit 1
 fi
 
 if ! mountpoint -q "$NAS_MOUNT_PATH"; then
-  echo "Fehler: $NAS_MOUNT_PATH ist nicht eingehängt."
+  echo "Error: $NAS_MOUNT_PATH is not mounted."
   exit 1
 fi
 
@@ -66,20 +66,20 @@ BACKUP_NAME=$(basename "$LATEST_BACKUP")
 cp "$LATEST_BACKUP" "$TARGET_DIR/$BACKUP_NAME"
 
 if [ $? -ne 0 ]; then
-  echo "Fehler: Upload auf NAS fehlgeschlagen!"
+  echo "Error: Upload to NAS failed!"
   exit 1
 fi
 
-echo "Backup erfolgreich auf NAS gespeichert: $TARGET_DIR/$BACKUP_NAME"
+echo "Backup successfully saved to NAS: $TARGET_DIR/$BACKUP_NAME"
 
 if [ -n "$REMOTE_RETENTION" ]; then
-  echo "lösche NAS-Backups, die älter als $REMOTE_RETENTION Tage sind..."
+  echo "Deleting NAS backups older than $REMOTE_RETENTION days..."
   find "$TARGET_DIR" -maxdepth 1 -type f -name "*.tar.gz" -mtime +"$REMOTE_RETENTION" -exec rm -f {} \;
 fi
 
 if [ -n "$LOCAL_RETENTION" ]; then
-  echo "lösche lokale Backups, die älter als $LOCAL_RETENTION Tage sind..."
+  echo "Deleting local backups older than $LOCAL_RETENTION days..."
   find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
 fi
 
-echo "NAS-Upload abgeschlossen."
+echo "NAS upload completed."

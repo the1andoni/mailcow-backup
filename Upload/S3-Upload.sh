@@ -1,21 +1,21 @@
 #!/bin/bash
 
-# Ueberpruefen, ob das Skript mit sudo ausgefuehrt wird
+# Check if script is run with sudo
 if [ "$EUID" -ne 0 ]; then
-  echo "Bitte fuehren Sie dieses Skript mit sudo aus."
+  echo "Please run this script with sudo."
   exit 1
 fi
 
-# Sicherstellen, dass das Backup abgeschlossen ist
+# Ensure backup is completed
 if [ ! -f /tmp/mailcow-backup.status ]; then
-  echo "Fehler: Backup ist noch nicht abgeschlossen!"
+  echo "Error: Backup not yet completed!"
   exit 1
 fi
 
 for cmd in gpg aws; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "Fehler: Abhängigkeit '$cmd' fehlt."
-    echo "Bitte führen Sie 'sudo ./Dependencies/install_dependencies.sh' aus."
+    echo "Error: Dependency '$cmd' is missing."
+    echo "Please run 'sudo ./Dependencies/install_dependencies.sh'."
     exit 1
   fi
 done
@@ -23,12 +23,12 @@ done
 CONFIG_DIR="$(dirname "$0")/../Configs"
 GPG_PASS_FILE="/root/.mailcow-gpg-pass"
 if [ ! -f "$GPG_PASS_FILE" ]; then
-  echo "Fehler: GPG-Passwortdatei $GPG_PASS_FILE nicht gefunden!"
+  echo "Error: GPG password file $GPG_PASS_FILE not found!"
   exit 1
 fi
 
 if [ ! -f "$CONFIG_DIR/s3-config.sh.gpg" ]; then
-  echo "Fehler: S3-Konfiguration $CONFIG_DIR/s3-config.sh.gpg nicht gefunden!"
+  echo "Error: S3 configuration $CONFIG_DIR/s3-config.sh.gpg not found!"
   exit 1
 fi
 
@@ -36,14 +36,14 @@ gpg_password=$(cat "$GPG_PASS_FILE")
 source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/s3-config.sh.gpg")
 
 if [ -z "$S3_BUCKET" ] || [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$AWS_DEFAULT_REGION" ]; then
-  echo "Fehler: Unvollstaendige S3-Konfiguration."
+  echo "Error: Incomplete S3 configuration."
   exit 1
 fi
 
 BACKUP_DIR="/backup/mailcow"
 LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.tar.gz 2>/dev/null | head -n 1)
 if [ -z "$LATEST_BACKUP" ] || [ ! -f "$LATEST_BACKUP" ]; then
-  echo "Fehler: Kein Backup gefunden!"
+  echo "Error: No backup found!"
   exit 1
 fi
 
@@ -62,16 +62,16 @@ fi
 
 "${AWS_CMD[@]}"
 if [ $? -ne 0 ]; then
-  echo "Fehler: Upload nach S3 fehlgeschlagen!"
+  echo "Error: Upload to S3 failed!"
   exit 1
 fi
 
-echo "Backup erfolgreich nach S3 hochgeladen: $S3_TARGET"
+echo "Backup successfully uploaded to S3: $S3_TARGET"
 
 if [ -n "$LOCAL_RETENTION" ]; then
-  echo "Loesche lokale Backups, die aelter als $LOCAL_RETENTION Tage sind..."
+  echo "Deleting local backups older than $LOCAL_RETENTION days..."
   find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
 fi
 
-echo "Hinweis: Remote-Retention fuer S3 sollte ueber Bucket-Lifecycle-Regeln konfiguriert werden."
-echo "S3-Upload abgeschlossen."
+echo "Note: Remote retention for S3 should be configured via bucket lifecycle rules."
+echo "S3 upload completed."

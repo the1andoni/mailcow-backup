@@ -1,85 +1,83 @@
 #!/bin/bash
 
-# Überprüfen, ob das Skript mit sudo ausgeführt wird
+# Check if script is run with sudo
 if [ "$EUID" -ne 0 ]; then
-  echo "Bitte führen Sie dieses Skript mit sudo aus."
+  echo "Please run this script with sudo."
   exit 1
 fi
 
-# Benötigte Abhängigkeiten prüfen
+# Check required dependencies
 for cmd in gpg tar; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "❌ Fehler: Abhängigkeit '$cmd' fehlt."
-    echo "Bitte führen Sie 'sudo ./Dependencies/install_dependencies.sh' aus."
+    echo "❌ Error: Dependency '$cmd' is missing."
+    echo "Please run 'sudo ./Dependencies/install_dependencies.sh'."
     exit 1
   fi
 done
 
-# Konfigurationsdatei entschlüsseln und laden
+# Path resolution
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$SCRIPT_DIR/../Configs"
 GPG_PASS_FILE="/root/.mailcow-gpg-pass"
+
+# Check if GPG password file exists
 if [ ! -f "$GPG_PASS_FILE" ]; then
-  echo "❌ Fehler: GPG-Passwortdatei $GPG_PASS_FILE nicht gefunden!"
+  echo "❌ Error: GPG password file $GPG_PASS_FILE not found!"
   exit 1
 fi
+
 gpg_password=$(cat "$GPG_PASS_FILE")
+LOCAL_RETENTION=""
 
-# Beziehe Retention aus einer vorhandenen Upload-Konfiguration (FTP oder WebDAV)
-if [ -f "$CONFIG_DIR/ftp-config.sh.gpg" ]; then
-  source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/ftp-config.sh.gpg")
-elif [ -f "$CONFIG_DIR/webdav-config.sh.gpg" ]; then
-  source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/webdav-config.sh.gpg")
-else
-  echo "❌ Fehler: Keine Konfiguration gefunden (ftp-config.sh.gpg oder webdav-config.sh.gpg)."
-  exit 1
-fi
+# Load retention settings from any available config
+for config in "$CONFIG_DIR"/ftp-config.sh.gpg "$CONFIG_DIR"/webdav-config.sh.gpg "$CONFIG_DIR"/nas-config.sh.gpg "$CONFIG_DIR"/s3-config.sh.gpg; do
+  if [ -f "$config" ]; then
+    source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$config" 2>/dev/null | grep "^LOCAL_RETENTION=")
+    if [ -n "$LOCAL_RETENTION" ]; then
+      break
+    fi
+  fi
+done
 
-# Variablen
+# Variables
 BACKUP_DIR="/backup/mailcow"
 MAILCOW_DIR="/opt/mailcow-dockerized"
-DATE=$(date +"%Y-%m-%d")
-BACKUP_PATH="$BACKUP_DIR/mailcow-$DATE"
-TAR_FILE="$BACKUP_DIR/mailcow-backup-$DATE.tar.gz"
+TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
+BACKUP_FILE="$BACKUP_DIR/mailcow-backup_$TIMESTAMP.tar.gz"
 
-# Sicherstellen, dass das Backup-Verzeichnis existiert
-sudo mkdir -p "$BACKUP_DIR"
-sudo mkdir -p "$BACKUP_PATH"
+# Remove old status file
+rm -f /tmp/mailcow-backup.status
 
-echo "[+] Starte mailcow-Backup..."
+# Ensure backup directory exists
+mkdir -p "$BACKUP_DIR"
 
-# mailcow-Backup starten und Pfad direkt übergeben
-cd "$MAILCOW_DIR" || { echo "❌ Fehler: mailcow-Verzeichnis nicht gefunden!"; exit 1; }
-DELETE_DAYS="${LOCAL_RETENTION:-7}"
-echo "$BACKUP_PATH" | ./helper-scripts/backup_and_restore.sh backup all --delete-days "$DELETE_DAYS"
-
-# Prüfen, ob das Backup erstellt wurde
-if [ ! -d "$BACKUP_PATH" ] || [ -z "$(ls -A "$BACKUP_PATH")" ]; then
-    echo "❌ Fehler: Backup-Ordner ist leer oder wurde nicht erstellt!"
-    exit 1
+# Check if mailcow directory exists
+if [ ! -d "$MAILCOW_DIR" ]; then
+  echo "❌ Error: Mailcow directory $MAILCOW_DIR not found!"
+  exit 1
 fi
 
-echo "[+] Backup erfolgreich erstellt: $BACKUP_PATH"
+echo "[+] Creating mailcow backup..."
+echo "[+] Backup location: $BACKUP_FILE"
 
-# Backup in ein tar.gz-Archiv packen
-tar -czvf "$TAR_FILE" -C "$BACKUP_DIR" "mailcow-$DATE"
+# Create tar.gz backup of mailcow directory
+tar -czf "$BACKUP_FILE" -C "$(dirname "$MAILCOW_DIR")" "$(basename "$MAILCOW_DIR")" 2>/dev/null
 
-# Prüfen, ob das Archiv existiert
-if [ ! -f "$TAR_FILE" ]; then
-    echo "❌ Fehler: Backup-Archiv wurde nicht erstellt!"
-    exit 1
-fi
-
-echo "[+] Archiv erfolgreich erstellt: $TAR_FILE"
-
-# Optional: Alte Backups löschen basierend auf LOCAL_RETENTION
-if [ -n "$LOCAL_RETENTION" ]; then
-  echo "[+] Lösche Backups, die älter als $LOCAL_RETENTION Tage sind..."
-  find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
-  echo "[✅] Alte Backups erfolgreich gelöscht."
+if [ $? -eq 0 ]; then
+  echo "[✅] Backup successfully created!"
+  echo "[+] Backup size: $(du -h "$BACKUP_FILE" | cut -f1)"
+  
+  # Create status file to signal upload scripts
+  touch /tmp/mailcow-backup.status
+  
+  # Delete old local backups if retention is set
+  if [ -n "$LOCAL_RETENTION" ]; then
+    echo "[+] Deleting local backups older than $LOCAL_RETENTION days..."
+    find "$BACKUP_DIR" -type f -name "mailcow-backup_*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
+  fi
 else
-  echo "[⚠️] Kein Löschintervall definiert. Es werden keine alten Backups gelöscht."
+  echo "❌ Error: Backup creation failed!"
+  exit 1
 fi
 
-# Backup erfolgreich abgeschlossen
-echo "Backup abgeschlossen." > /tmp/mailcow-backup.status
+echo "[✅] Backup process completed."

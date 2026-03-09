@@ -1,43 +1,43 @@
 #!/bin/bash
 
-# Überprüfen, ob das Skript mit sudo ausgeführt wird
+# Check if script is run with sudo
 if [ "$EUID" -ne 0 ]; then
-  echo "Bitte führen Sie dieses Skript mit sudo aus."
+  echo "Please run this script with sudo."
   exit 1
 fi
 
-# Sicherstellen, dass das Backup abgeschlossen ist
+# Ensure backup is completed
 if [ ! -f /tmp/mailcow-backup.status ]; then
-  echo "❌ Fehler: Backup ist noch nicht abgeschlossen!"
+  echo "❌ Error: Backup not yet completed!"
   exit 1
 fi
 
-# Benötigte Abhängigkeiten prüfen
+# Check required dependencies
 for cmd in gpg curl; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "❌ Fehler: Abhängigkeit '$cmd' fehlt."
-    echo "Bitte führen Sie 'sudo ./Dependencies/install_dependencies.sh' aus."
+    echo "❌ Error: Dependency '$cmd' is missing."
+    echo "Please run 'sudo ./Dependencies/install_dependencies.sh'."
     exit 1
   fi
 done
 
-# Konfigurationsdatei entschlüsseln und laden
+# Decrypt and load configuration file
 CONFIG_DIR="$(dirname "$0")/../Configs"
 GPG_PASS_FILE="/root/.mailcow-gpg-pass"
 if [ ! -f "$GPG_PASS_FILE" ]; then
-  echo "❌ Fehler: GPG-Passwortdatei $GPG_PASS_FILE nicht gefunden!"
+  echo "❌ Error: GPG password file $GPG_PASS_FILE not found!"
   exit 1
 fi
 gpg_password=$(cat "$GPG_PASS_FILE")
 source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/ftp-config.sh.gpg")
 
-# Kompatible Defaults fuer bestehende Konfigurationen
+# Compatible defaults for existing configurations
 FTP_PROTOCOL="${FTP_PROTOCOL:-ftp}"
 FTP_UPLOAD_DIR="${FTP_UPLOAD_DIR:-/}"
 
 FTP_PROTOCOL=$(echo "$FTP_PROTOCOL" | tr '[:upper:]' '[:lower:]')
 if [ "$FTP_PROTOCOL" != "ftp" ] && [ "$FTP_PROTOCOL" != "sftp" ]; then
-  echo "❌ Fehler: Ungueltiges Protokoll '$FTP_PROTOCOL'. Erlaubt sind: ftp, sftp"
+  echo "❌ Error: Invalid protocol '$FTP_PROTOCOL'. Allowed: ftp, sftp"
   exit 1
 fi
 
@@ -45,40 +45,40 @@ if [[ "$FTP_UPLOAD_DIR" != /* ]]; then
   FTP_UPLOAD_DIR="/$FTP_UPLOAD_DIR"
 fi
 
-# Variablen
+# Variables
 BACKUP_DIR="/backup/mailcow"
 LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.tar.gz | head -n 1)
 BACKUP_BASENAME=$(basename "$LATEST_BACKUP")
 TARGET_URL="$FTP_PROTOCOL://$FTP_SERVER$FTP_UPLOAD_DIR/$BACKUP_BASENAME"
 
-# Prüfen, ob ein Backup vorhanden ist
+# Check if backup exists
 if [ ! -f "$LATEST_BACKUP" ]; then
-  echo "❌ Fehler: Kein Backup gefunden!"
+  echo "❌ Error: No backup found!"
   exit 1
 fi
 
-# Backup per FTP oder SFTP hochladen
+# Upload backup via FTP or SFTP
 if [ "$FTP_PROTOCOL" = "ftp" ] && [ -n "$FTP_CERTIFICATE_FINGERPRINT" ]; then
-  echo "[+] Lade Backup per FTP mit TLS hoch..."
+  echo "[+] Uploading backup via FTP with TLS..."
   curl --pinnedpubkey "$FTP_CERTIFICATE_FINGERPRINT" -u "$FTP_USER:$FTP_PASSWORD" -T "$LATEST_BACKUP" "$TARGET_URL"
 else
-  echo "[+] Lade Backup per $FTP_PROTOCOL hoch..."
+  echo "[+] Uploading backup via $FTP_PROTOCOL..."
   curl -u "$FTP_USER:$FTP_PASSWORD" -T "$LATEST_BACKUP" "$TARGET_URL"
 fi
 
-# Prüfen, ob der Upload erfolgreich war
+# Check if upload was successful
 if [ $? -eq 0 ]; then
-  echo "[✅] Backup erfolgreich per $FTP_PROTOCOL hochgeladen!"
+  echo "[✅] Backup successfully uploaded via $FTP_PROTOCOL!"
 else
-  echo "❌ Fehler: Upload per $FTP_PROTOCOL fehlgeschlagen!"
+  echo "❌ Error: Upload via $FTP_PROTOCOL failed!"
   exit 1
 fi
 
-# Alte Backups lokal löschen
+# Delete old local backups
 if [ -n "$LOCAL_RETENTION" ]; then
-  echo "[+] Lösche lokale Backups, die älter als $LOCAL_RETENTION Tage sind..."
+  echo "[+] Deleting local backups older than $LOCAL_RETENTION days..."
   find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
-  echo "[✅] Alte lokale Backups erfolgreich gelöscht."
+  echo "[✅] Old local backups successfully deleted."
 else
-  echo "[⚠️] Kein Löschintervall für lokale Backups definiert. Es werden keine alten Backups gelöscht."
+  echo "[⚠️] No retention interval defined for local backups. No old backups will be deleted."
 fi

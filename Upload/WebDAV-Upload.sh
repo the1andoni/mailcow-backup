@@ -1,63 +1,63 @@
 #!/bin/bash
 
-# Überprüfen, ob das Skript mit sudo ausgeführt wird
+# Check if script is run with sudo
 if [ "$EUID" -ne 0 ]; then
-  echo "Bitte führen Sie dieses Skript mit sudo aus."
+  echo "Please run this script with sudo."
   exit 1
 fi
 
-# Sicherstellen, dass das Backup abgeschlossen ist
+# Ensure backup is completed
 if [ ! -f /tmp/mailcow-backup.status ]; then
-  echo "❌ Fehler: Backup ist noch nicht abgeschlossen!"
+  echo "❌ Error: Backup not yet completed!"
   exit 1
 fi
 
-# Benötigte Abhängigkeiten prüfen
+# Check required dependencies
 for cmd in gpg curl; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
-    echo "❌ Fehler: Abhängigkeit '$cmd' fehlt."
-    echo "Bitte führen Sie 'sudo ./Dependencies/install_dependencies.sh' aus."
+    echo "❌ Error: Dependency '$cmd' is missing."
+    echo "Please run 'sudo ./Dependencies/install_dependencies.sh'."
     exit 1
   fi
 done
 
-# Konfigurationsdatei entschlüsseln und laden
+# Decrypt and load configuration file
 CONFIG_DIR="$(dirname "$0")/../Configs"
 GPG_PASS_FILE="/root/.mailcow-gpg-pass"
 if [ ! -f "$GPG_PASS_FILE" ]; then
-  echo "❌ Fehler: GPG-Passwortdatei $GPG_PASS_FILE nicht gefunden!"
+  echo "❌ Error: GPG password file $GPG_PASS_FILE not found!"
   exit 1
 fi
 gpg_password=$(cat "$GPG_PASS_FILE")
 source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/webdav-config.sh.gpg")
 
-# Variablen
+# Variables
 BACKUP_DIR="/backup/mailcow"
 LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.tar.gz | head -n 1)
 
-# Prüfen, ob ein Backup vorhanden ist
+# Check if backup exists
 if [ ! -f "$LATEST_BACKUP" ]; then
-  echo "❌ Fehler: Kein Backup gefunden!"
+  echo "❌ Error: No backup found!"
   exit 1
 fi
 
-# Backup auf WebDAV hochladen
-echo "[+] Lade Backup auf WebDAV-Server hoch..."
+# Upload backup to WebDAV
+echo "[+] Uploading backup to WebDAV server..."
 UPLOAD_RESPONSE=$(curl -u "$WEBDAV_USER:$WEBDAV_PASSWORD" -T "$LATEST_BACKUP" "$WEBDAV_URL" --silent --write-out "%{http_code}")
 
-# Prüfen, ob der Upload erfolgreich war
+# Check if upload was successful
 if [ "$UPLOAD_RESPONSE" -eq 201 ] || [ "$UPLOAD_RESPONSE" -eq 204 ]; then
-  echo "[✅] Backup erfolgreich auf WebDAV-Server hochgeladen!"
+  echo "[✅] Backup successfully uploaded to WebDAV server!"
 else
-  echo "❌ Fehler: Upload fehlgeschlagen (HTTP-Code: $UPLOAD_RESPONSE)"
+  echo "❌ Error: Upload failed (HTTP code: $UPLOAD_RESPONSE)"
   exit 1
 fi
 
-# Alte Backups lokal löschen
+# Delete old local backups
 if [ -n "$LOCAL_RETENTION" ]; then
-  echo "[+] Lösche lokale Backups, die älter als $LOCAL_RETENTION Tage sind..."
+  echo "[+] Deleting local backups older than $LOCAL_RETENTION days..."
   find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
-  echo "[✅] Alte lokale Backups erfolgreich gelöscht."
+  echo "[✅] Old local backups successfully deleted."
 else
-  echo "[⚠️] Kein Löschintervall für lokale Backups definiert. Es werden keine alten Backups gelöscht."
+  echo "[⚠️] No retention interval defined for local backups. No old backups will be deleted."
 fi

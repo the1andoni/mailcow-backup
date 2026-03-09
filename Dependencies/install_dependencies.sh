@@ -1,28 +1,28 @@
 #!/bin/bash
 
-# Überprüfen, ob das Skript mit sudo ausgeführt wird
+# Check if script is run with sudo
 if [ "$EUID" -ne 0 ]; then
-  echo "Bitte führen Sie dieses Skript mit sudo aus."
+  echo "Please run this script with sudo."
   exit 1
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEPENDENCIES_FILE="$SCRIPT_DIR/dependencies.txt"
 
-# Prüfen, ob die Abhängigkeiten-Datei existiert
+# Check if dependencies file exists
 if [ ! -f "$DEPENDENCIES_FILE" ]; then
-  echo "❌ Fehler: Die Datei 'dependencies.txt' wurde nicht gefunden!"
+  echo "❌ Error: File 'dependencies.txt' not found!"
   exit 1
 fi
 
-echo "📦 Installiere Abhängigkeiten aus '$DEPENDENCIES_FILE'..."
+echo "📦 Installing dependencies from '$DEPENDENCIES_FILE'..."
 
-# Jede Zeile der Datei lesen und das Paket installieren
+# Read each line and install the package
 while IFS= read -r package || [ -n "$package" ]; do
   if [ -n "$package" ] && [[ ! "$package" =~ ^# ]]; then
-    echo "🔄 Installiere $package..."
-    apt-get install -y "$package" || { echo "❌ Fehler beim Installieren von $package"; exit 1; }
+    echo "🔄 Installing $package..."
+    apt-get install -y "$package" || { echo "❌ Error installing $package"; exit 1; }
   fi
 done < "$DEPENDENCIES_FILE"
 
-echo "✅ Alle Abhängigkeiten wurden erfolgreich installiert!"
+echo "✅ All dependencies successfully installed!"
