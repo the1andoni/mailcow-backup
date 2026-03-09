@@ -114,6 +114,8 @@ This repository uses multiple branches for different stability levels:
 
 **For production systems, always use the `V3` branch or tagged releases (`v3.0.0`, `v3.1.0`, etc.).**
 
+Already on a different branch? You can switch during update with `sudo ./update.sh --v3`.
+
 **Clone instructions:**
 ```bash
 # Stable production version (recommended)
@@ -154,6 +156,23 @@ The backup script automatically reads this password and decrypts the configurati
   ```bash
   sudo ./update.sh
   ```
+
+  **Switch release track during update:**
+
+  ```bash
+  # Switch/update to main (development)
+  sudo ./update.sh --main
+
+  # Switch/update to V3 (stable)
+  sudo ./update.sh --v3
+
+  # Switch/update to V2-LEGACY (legacy)
+  sudo ./update.sh --v2
+  ```
+
+  **Downgrade protection:**
+  - Allowed upgrade path: `V2-LEGACY -> V3 -> main`
+  - Downgrades are blocked (for example `V3 -> V2-LEGACY`)
 
   The update script:
   - Shows changes in update.sh first (Phase 1)
@@ -385,6 +404,8 @@ Dieses Repository verwendet mehrere Branches für unterschiedliche Stabilitätss
 
 **Für Produktivsysteme sollte immer der `V3`-Branch oder getaggte Releases (`v3.0.0`, `v3.1.0`, etc.) verwendet werden.**
 
+Bereits auf einem anderen Branch? Der Wechsel ist beim Update mit `sudo ./update.sh --v3` möglich.
+
 **Clone-Anweisungen:**
 ```bash
 # Stabile Produktivversion (empfohlen)
@@ -425,6 +446,23 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
   ```bash
   sudo ./update.sh
   ```
+
+  **Release-Track beim Update wechseln:**
+
+  ```bash
+  # Auf main wechseln/aktualisieren (Entwicklung)
+  sudo ./update.sh --main
+
+  # Auf V3 wechseln/aktualisieren (stabil)
+  sudo ./update.sh --v3
+
+  # Auf V2-LEGACY wechseln/aktualisieren (legacy)
+  sudo ./update.sh --v2
+  ```
+
+  **Downgrade-Schutz:**
+  - Erlaubter Upgrade-Pfad: `V2-LEGACY -> V3 -> main`
+  - Downgrades sind blockiert (z. B. `V3 -> V2-LEGACY`)
 
   Das Update-Skript:
   - Zeigt zuerst Änderungen in update.sh (Phase 1)
