@@ -149,6 +149,9 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 - German: `Docs/RELEASE_TAG_POLICY.de.md`
 - English: `Docs/RELEASE_TAG_POLICY.en.md`
 
+**Project wiki:**
+- GitHub Wiki: <https://github.com/the1andoni/mailcow-backup/wiki>
+
 ### 🔐 Automated Backups & GPG Password
 
 For scheduled backups and uploads to work without interaction, the GPG password is automatically saved during setup in a file (`/root/.mailcow-gpg-pass`).
@@ -452,6 +455,9 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 **Release-Tag-Policy:**
 - Deutsch: `Docs/RELEASE_TAG_POLICY.de.md`
 - Englisch: `Docs/RELEASE_TAG_POLICY.en.md`
+
+**Projekt-Wiki:**
+- GitHub Wiki: <https://github.com/the1andoni/mailcow-backup/wiki>
 
 ### 🔐 Automatisierte Backups & GPG-Passwort
 

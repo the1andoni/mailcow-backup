@@ -1,12 +1,12 @@
 # Release Tag Policy
 
-Diese Policy definiert, wie Release-Tags in diesem Repository erstellt und geschuetzt werden.
+Diese Policy definiert, wie Release-Tags in diesem Repository erstellt und geschützt werden.
 
 ## Ziel
 
-- Eindeutige, unveraenderliche Release-Tags
+- Eindeutige, unveränderliche Release-Tags
 - Konsistente Versionierung nach Semantic Versioning
-- Schutz vor versehentlichem Ueberschreiben oder Loeschen
+- Schutz vor versehentlichem Überschreiben oder Löschen
 
 ## Tag-Namensschema
 
