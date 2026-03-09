@@ -13,6 +13,9 @@ A Bash script for backing up mailcow data with support for WebDAV, FTP/SFTP, NAS
 
 ```
 mailcow-backup/
+├── LICENSE
+├── README.md
+├── RELEASE_NOTES_V3.md
 ├── setup.sh
 ├── update.sh
 ├── Backup/
@@ -22,6 +25,13 @@ mailcow-backup/
 │   └── install_dependencies.sh
 ├── Configs/
 │   └── (encrypted configuration files)
+├── Docs/
+│   ├── RELEASE_TAG_POLICY.de.md
+│   ├── RELEASE_TAG_POLICY.en.md
+│   └── releases/
+│       ├── RELEASE_POST_V3.0.0.md
+│       ├── RELEASE_POST_V3.0.0.de.md
+│       └── RELEASE_POST_V3.0.0.en.md
 └── Upload/
     ├── FTP-Upload.sh
     ├── NAS-Upload.sh
@@ -134,6 +144,10 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 - New features → `main` branch
 - Stable releases → pushed to `V3` after testing
 - Critical bugfixes → `V3` or `V2-LEGACY` directly
+
+**Release tag policy:**
+- German: `Docs/RELEASE_TAG_POLICY.de.md`
+- English: `Docs/RELEASE_TAG_POLICY.en.md`
 
 ### 🔐 Automated Backups & GPG Password
 
@@ -302,6 +316,9 @@ Ein Bash-Skript zur Sicherung von mailcow-Daten mit Unterstützung für WebDAV-,
 
 ```
 mailcow-backup/
+├── LICENSE
+├── README.md
+├── RELEASE_NOTES_V3.md
 ├── setup.sh
 ├── update.sh
 ├── Backup/
@@ -311,6 +328,13 @@ mailcow-backup/
 │   └── install_dependencies.sh
 ├── Configs/
 │   └── (verschlüsselte Konfigurationsdateien)
+├── Docs/
+│   ├── RELEASE_TAG_POLICY.de.md
+│   ├── RELEASE_TAG_POLICY.en.md
+│   └── releases/
+│       ├── RELEASE_POST_V3.0.0.md
+│       ├── RELEASE_POST_V3.0.0.de.md
+│       └── RELEASE_POST_V3.0.0.en.md
 └── Upload/
     ├── FTP-Upload.sh
     ├── NAS-Upload.sh
@@ -424,6 +448,10 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 - Neue Features → `main` Branch
 - Stabile Releases → nach Tests auf `V3` gepusht
 - Kritische Bugfixes → direkt in `V3` oder `V2-LEGACY`
+
+**Release-Tag-Policy:**
+- Deutsch: `Docs/RELEASE_TAG_POLICY.de.md`
+- Englisch: `Docs/RELEASE_TAG_POLICY.en.md`
 
 ### 🔐 Automatisierte Backups & GPG-Passwort
 
