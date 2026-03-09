@@ -77,13 +77,42 @@ repair_systemd_services() {
     fi
 }
 
-echo "--- Mailcow-BackupV2 Auto-Updater ---"
+echo "--- Mailcow-Backup Auto-Updater ---"
 
 # 1. Check if we're in a Git repository
 if [ ! -d .git ]; then
     echo "Error: No Git repository found. Update not possible."
     exit 1
 fi
+
+# 2. Detect current branch
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+if [ -z "$CURRENT_BRANCH" ]; then
+    echo "Error: Could not detect current branch."
+    exit 1
+fi
+
+echo "Current branch: $CURRENT_BRANCH"
+
+# Show branch-specific information
+case "$CURRENT_BRANCH" in
+    main)
+        echo "⚠️  WARNING: You are on the development branch!"
+        echo "   This branch may contain unstable code."
+        echo "   For production use, consider switching to the V3 branch."
+        echo ""
+        ;;
+    V3)
+        echo "✓ You are on the stable release track."
+        echo ""
+        ;;
+    V2-LEGACY)
+        echo "⚠️  You are on the legacy v2.x support track."
+        echo "   This branch receives security fixes only."
+        echo "   Consider migrating to V3 for new features and improvements."
+        echo ""
+        ;;
+esac
 
 # 2. Save local changes (incl. untracked files)
 # If restarted after self-update, use existing stash info
@@ -109,11 +138,11 @@ fi
 
 # 3. Fetch remote info
 echo "Checking for updates..."
-git fetch origin main &>/dev/null
+git fetch origin "$CURRENT_BRANCH" &>/dev/null
 
 # 4. Compare: Local vs. Remote
 LOCAL=$(git rev-parse HEAD)
-REMOTE=$(git rev-parse origin/main)
+REMOTE=$(git rev-parse "origin/$CURRENT_BRANCH")
 
 if [ "$LOCAL" = "$REMOTE" ]; then
     echo "✓ Your backup script is already up to date."
@@ -129,14 +158,14 @@ fi
 # ========================================
 if [ "$SELF_UPDATE_DONE" != "--self-updated" ]; then
     # Check if update.sh itself was changed
-    if git diff --name-only HEAD..origin/main | grep -q "^update.sh$"; then
+    if git diff --name-only HEAD.."origin/$CURRENT_BRANCH" | grep -q "^update.sh$"; then
         echo ""
         echo "⚡ Update script itself has an update!"
         echo ""
         echo "=== Changes in update.sh ==="
-        git log --oneline --no-decorate HEAD..origin/main -- update.sh
+        git log --oneline --no-decorate HEAD.."origin/$CURRENT_BRANCH" -- update.sh
         echo ""
-        git diff HEAD..origin/main -- update.sh | head -30
+        git diff HEAD.."origin/$CURRENT_BRANCH" -- update.sh | head -30
         echo "==========================="
         echo ""
         
@@ -152,7 +181,7 @@ if [ "$SELF_UPDATE_DONE" != "--self-updated" ]; then
         fi
         
         echo "Updating update.sh..."
-        git checkout origin/main -- update.sh
+        git checkout "origin/$CURRENT_BRANCH" -- update.sh
         chmod +x update.sh
         
         echo "✓ Update script updated. Restarting..."
@@ -174,11 +203,11 @@ echo "=== Changes in update ==="
 # Show commit messages
 echo ""
 echo "📝 Commits:"
-git log --oneline --no-decorate HEAD..origin/main
+git log --oneline --no-decorate HEAD.."origin/$CURRENT_BRANCH"
 
 echo ""
 echo "📂 Changed files:"
-git diff --name-status HEAD..origin/main | head -20
+git diff --name-status HEAD.."origin/$CURRENT_BRANCH" | head -20
 
 echo ""
 echo "==========================="
@@ -197,7 +226,7 @@ if [[ ! $REPLY =~ ^[Yy]$ ]]; then
 fi
 
 echo "Downloading new version..."
-git pull origin main
+git pull origin "$CURRENT_BRANCH"
 
 if [ $? -eq 0 ]; then
     echo "✓ Update successfully completed."
