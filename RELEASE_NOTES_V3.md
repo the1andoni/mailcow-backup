@@ -11,6 +11,21 @@
   - V3 users stay on stable track
   - main branch users see development warning
 
+- **Manual Version/Branch Flags in `update.sh`**
+  - New flags: `--main`, `--v3`, `--v2`
+  - Supported shortcuts: `main`, `V3`/`v3`, `V2`/`v2`
+  - Explicit upgrade path enforcement: `V2-LEGACY -> V3 -> main`
+  - Downgrades are blocked (for example `main -> V3` or `V3 -> V2-LEGACY`)
+  - `--help` now includes version flag usage and upgrade/downgrade rules
+
+Example usage:
+
+```bash
+./update.sh --v3
+./update.sh --main
+./update.sh --v2
+```
+
 ### 📚 Documentation
 
 - **V2 to V3 Migration Guide**: Added comprehensive migration instructions to V2-LEGACY README
@@ -35,11 +50,19 @@
   - Better integration with mailcow's native backup functionality
   - Respects mailcow's retention policies
 
+- **Internationalization Foundation**:
+  - Scripts, outputs, and comments standardized to English
+  - Improved maintainability for international contributors
+
 - **Enhanced Dependency Management**:
   - Optional dependency support with `optional:package-name` syntax
   - AWS CLI fallback installer when apt package unavailable
   - Automatic detection of system architecture (x86_64/aarch64)
   - Graceful handling of missing optional dependencies
+
+- **New Upload Targets in V3**:
+  - Added NAS upload workflow for mounted shares (SMB/CIFS, NFS)
+  - Added S3 upload workflow for AWS S3 and S3-compatible providers
 
 - **Systemd Service Repair**: Automatic path correction after repository moves or updates
   - Repairs ExecStart paths in systemd unit files
@@ -51,6 +74,7 @@
   - Uses relative path for mailcow helper script (more portable)
   - Better error handling for missing mailcow installation
   - Improved validation of mailcow directory structure
+  - Timestamped archive naming for clearer backup history
 
 - **Dependency Installer**:
   - Three-tier AWS CLI installation fallback:
@@ -83,6 +107,7 @@
 - Fixed hardcoded repository name references (mailcow-backupV2 → mailcow-backup)
 - Fixed backup script to use correct relative path for mailcow helper
 - Fixed AWS CLI installation failures on systems without apt package
+- Improved robustness of upload pre-checks and error handling
 
 ### 📚 Documentation
 
@@ -159,6 +184,13 @@ Starting with V3, the project uses a three-branch strategy:
 - **main**: Updates from `origin/main` (latest development code)
 - **V3**: Updates from `origin/V3` (stable releases only)
 - **V2-LEGACY**: Updates from `origin/V2-LEGACY` (critical fixes only)
+
+### Optional Explicit Branch Switch via Flag
+
+- `./update.sh --main` switches to `main` and updates
+- `./update.sh --v3` switches to `V3` and updates
+- `./update.sh --v2` switches to `V2-LEGACY` and updates
+- Downgrades are intentionally blocked to reduce accidental regressions
 
 The update script is now branch-aware and will not accidentally switch your installation to a different track.
 
