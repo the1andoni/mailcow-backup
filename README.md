@@ -77,6 +77,74 @@ git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
 
 **Migration to V3:** If you want to upgrade from V2 to V3, please check the [V3 release notes](https://github.com/the1andoni/mailcow-backup/releases/tag/v3.0.0) for breaking changes and migration instructions.
 
+---
+
+### 🔄 Migrating from V2 to V3
+
+**Important:** The `update.sh` script in V2-LEGACY will keep you on the V2-LEGACY branch. It **will not** automatically migrate you to V3.
+
+#### Migration Steps:
+
+1. **Backup your current configuration:**
+   ```bash
+   cd /path/to/mailcow-backup
+   cp -r Configs Configs.backup
+   # Also backup your GPG password file
+   sudo cp /root/.mailcow-gpg-pass /root/.mailcow-gpg-pass.backup
+   ```
+
+2. **Clone V3 into a new directory:**
+   ```bash
+   cd /path/to
+   git clone -b V3 https://github.com/the1andoni/mailcow-backup.git mailcow-backup-v3
+   cd mailcow-backup-v3
+   ```
+
+3. **Migrate your configurations:**
+   ```bash
+   # Copy encrypted config files
+   cp ../mailcow-backup/Configs/* Configs/
+   
+   # Copy GPG password (if using encryption)
+   # Already available at /root/.mailcow-gpg-pass
+   ```
+
+4. **Run setup to verify/update configuration:**
+   ```bash
+   sudo ./setup.sh
+   # The setup will detect existing configs and allow you to update them if needed
+   ```
+
+5. **Test the backup manually:**
+   ```bash
+   sudo bash Backup/mailcow-backup.sh
+   # Check if backup runs successfully
+   ```
+
+6. **Verify systemd services:**
+   ```bash
+   systemctl status mailcow-backup.timer
+   systemctl status mailcow-backup.service
+   # Paths should point to the new V3 directory
+   ```
+
+#### What's New in V3:
+
+- **Improved mailcow integration:** Direct use of mailcow's official backup helper script
+- **Better dependency management:** Optional dependencies with fallback installers (e.g., AWS CLI)
+- **Enhanced update.sh:** Branch-aware updates prevent accidental branch switches
+- **Systemd service repair:** Automatic path correction after updates
+
+#### Breaking Changes:
+
+- Backup script now requires mailcow's helper script at `./helper-scripts/backup_and_restore.sh`
+- AWS CLI installation includes fallback to official installer if apt package unavailable
+- Directory structure unchanged, configurations are compatible
+
+For detailed changelog, see: https://github.com/the1andoni/mailcow-backup/releases/tag/v3.0.0
+
+---
+
 ### 🚀 Installation
 
    Sie können das Repository mithilfe von Git Clone einfach runterladen.
@@ -367,6 +435,74 @@ git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
 ```
 
 **Migration zu V3:** Falls Sie von V2 auf V3 upgraden möchten, prüfen Sie bitte die [V3 Release Notes](https://github.com/the1andoni/mailcow-backup/releases/tag/v3.0.0) für Breaking Changes und Migrationsanleitung.
+
+---
+
+### 🔄 Migration von V2 zu V3
+
+**Wichtig:** Das `update.sh` Skript in V2-LEGACY hält Sie auf dem V2-LEGACY Branch. Es wird Sie **nicht** automatisch zu V3 migrieren.
+
+#### Migrationsschritte:
+
+1. **Sichern Sie Ihre aktuelle Konfiguration:**
+   ```bash
+   cd /pfad/zu/mailcow-backup
+   cp -r Configs Configs.backup
+   # Sichern Sie auch Ihre GPG-Passwortdatei
+   sudo cp /root/.mailcow-gpg-pass /root/.mailcow-gpg-pass.backup
+   ```
+
+2. **Klonen Sie V3 in ein neues Verzeichnis:**
+   ```bash
+   cd /pfad/zu
+   git clone -b V3 https://github.com/the1andoni/mailcow-backup.git mailcow-backup-v3
+   cd mailcow-backup-v3
+   ```
+
+3. **Migrieren Sie Ihre Konfigurationen:**
+   ```bash
+   # Kopieren Sie verschlüsselte Config-Dateien
+   cp ../mailcow-backup/Configs/* Configs/
+   
+   # GPG-Passwort kopieren (falls Verschlüsselung verwendet wird)
+   # Bereits verfügbar unter /root/.mailcow-gpg-pass
+   ```
+
+4. **Führen Sie das Setup aus um die Konfiguration zu prüfen/aktualisieren:**
+   ```bash
+   sudo ./setup.sh
+   # Das Setup erkennt existierende Configs und erlaubt Updates bei Bedarf
+   ```
+
+5. **Testen Sie das Backup manuell:**
+   ```bash
+   sudo bash Backup/mailcow-backup.sh
+   # Prüfen Sie, ob das Backup erfolgreich läuft
+   ```
+
+6. **Überprüfen Sie die systemd Services:**
+   ```bash
+   systemctl status mailcow-backup.timer
+   systemctl status mailcow-backup.service
+   # Pfade sollten auf das neue V3-Verzeichnis zeigen
+   ```
+
+#### Was ist neu in V3:
+
+- **Verbesserte mailcow-Integration:** Direkte Nutzung des offiziellen mailcow Backup-Helper-Skripts
+- **Besseres Dependency-Management:** Optionale Abhängigkeiten mit Fallback-Installern (z.B. AWS CLI)
+- **Verbessertes update.sh:** Branch-bewusste Updates verhindern versehentliche Branch-Wechsel
+- **Systemd Service Reparatur:** Automatische Pfadkorrektur nach Updates
+
+#### Breaking Changes:
+
+- Backup-Skript benötigt nun mailcows Helper-Skript unter `./helper-scripts/backup_and_restore.sh`
+- AWS CLI Installation beinhaltet Fallback zum offiziellen Installer falls apt-Paket nicht verfügbar
+- Verzeichnisstruktur unverändert, Konfigurationen sind kompatibel
+
+Für detailliertes Changelog siehe: https://github.com/the1andoni/mailcow-backup/releases/tag/v3.0.0
+
+---
 
 ### 🚀 Installation
 
