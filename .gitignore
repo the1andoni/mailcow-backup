@@ -1,0 +1,21 @@
+# --- System-Dateien ---
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# --- Benutzer-Konfigurationen (WICHTIG) ---
+configs/*.conf
+
+# Wir erlauben aber die Beispiel-Dateien, damit Nutzer eine Vorlage haben.
+!configs/*.conf.example
+
+# --- Backups und Logs ---
+backups/
+*.log
+*.tmp
+
+# --- Sicherheit ---
+*.key
+*.pub
+*.pem
