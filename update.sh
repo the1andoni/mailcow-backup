@@ -9,12 +9,16 @@ repair_systemd_services() {
     local backup_script="$REPO_DIR/Backup/mailcow-backup.sh"
     local ftp_script="$REPO_DIR/Upload/FTP-Upload.sh"
     local webdav_script="$REPO_DIR/Upload/WebDAV-Upload.sh"
+    local nas_script="$REPO_DIR/Upload/NAS-Upload.sh"
+    local s3_script="$REPO_DIR/Upload/S3-Upload.sh"
     
     # Array mit den zu überprüfenden Services
     local services=(
         "/etc/systemd/system/mailcow-backup.service"
         "/etc/systemd/system/mailcow-ftp-upload.service"
         "/etc/systemd/system/mailcow-webdav-upload.service"
+        "/etc/systemd/system/mailcow-nas-upload.service"
+        "/etc/systemd/system/mailcow-s3-upload.service"
     )
     
     local needs_reload=false
@@ -40,6 +44,20 @@ repair_systemd_services() {
                     if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $webdav_script$" "$service_file"; then
                         echo "⚠️  Repariere $service_file"
                         sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $webdav_script|" "$service_file"
+                        needs_reload=true
+                    fi
+                    ;;
+                "/etc/systemd/system/mailcow-nas-upload.service")
+                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $nas_script$" "$service_file"; then
+                        echo "⚠️  Repariere $service_file"
+                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $nas_script|" "$service_file"
+                        needs_reload=true
+                    fi
+                    ;;
+                "/etc/systemd/system/mailcow-s3-upload.service")
+                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $s3_script$" "$service_file"; then
+                        echo "⚠️  Repariere $service_file"
+                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $s3_script|" "$service_file"
                         needs_reload=true
                     fi
                     ;;
@@ -89,6 +107,33 @@ REMOTE=$(git rev-parse origin/main)
 
 if [ "$LOCAL" != "$REMOTE" ]; then
     echo "Ein Update ist verfügbar!"
+    echo ""
+    echo "=== Änderungen im Update ==="
+    
+    # Zeige Commit-Nachrichten
+    echo ""
+    echo "📝 Commits:"
+    git log --oneline --no-decorate HEAD..origin/main
+    
+    echo ""
+    echo "📂 Geänderte Dateien:"
+    git diff --name-status HEAD..origin/main | head -20
+    
+    echo ""
+    echo "==========================="
+    echo ""
+    
+    # Benutzer fragen, ob Update durchgeführt werden soll
+    read -p "Möchtest du das Update jetzt installieren? (j/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Jj]$ ]]; then
+        echo "Update abgebrochen."
+        if [ "$STASH_CREATED" = true ]; then
+            echo "Stelle lokale Änderungen wieder her..."
+            git stash pop &>/dev/null
+        fi
+        exit 0
+    fi
     
     echo "Lade neue Version herunter..."
     git pull origin main

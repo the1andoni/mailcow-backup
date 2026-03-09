@@ -12,6 +12,15 @@ if [ ! -f /tmp/mailcow-backup.status ]; then
   exit 1
 fi
 
+# Benötigte Abhängigkeiten prüfen
+for cmd in gpg curl; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "❌ Fehler: Abhängigkeit '$cmd' fehlt."
+    echo "Bitte führen Sie 'sudo ./Dependencies/install_dependencies.sh' aus."
+    exit 1
+  fi
+done
+
 # Konfigurationsdatei entschlüsseln und laden
 CONFIG_DIR="$(dirname "$0")/../Configs"
 GPG_PASS_FILE="/root/.mailcow-gpg-pass"

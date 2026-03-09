@@ -66,7 +66,54 @@ SCRIPT_DIR="$(dirname "$0")"
 BACKUP_SCRIPT="$SCRIPT_DIR/Backup/mailcow-backup.sh"
 FTP_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/FTP-Upload.sh"
 WEBDAV_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/WebDAV-Upload.sh"
+NAS_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/NAS-Upload.sh"
+S3_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/S3-Upload.sh"
 mkdir -p "$CONFIG_DIR"
+
+ensure_dependencies() {
+  local feature="$1"
+  shift
+  local missing=()
+  local cmd
+
+  for cmd in "$@"; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      missing+=("$cmd")
+    fi
+  done
+
+  if [ ${#missing[@]} -eq 0 ]; then
+    return 0
+  fi
+
+  echo "Fehlende Abhängigkeiten für $feature: ${missing[*]}"
+  read -p "Möchten Sie jetzt versuchen, fehlende Abhängigkeiten zu installieren? (y/n) " install_choice
+  if [ "$install_choice" = "y" ]; then
+    if [ -f "$REPO_DIR/Dependencies/install_dependencies.sh" ]; then
+      sudo bash "$REPO_DIR/Dependencies/install_dependencies.sh"
+    else
+      echo "Fehler: install_dependencies.sh nicht gefunden."
+      return 1
+    fi
+  else
+    return 1
+  fi
+
+  missing=()
+  for cmd in "$@"; do
+    if ! command -v "$cmd" >/dev/null 2>&1; then
+      missing+=("$cmd")
+    fi
+  done
+
+  if [ ${#missing[@]} -gt 0 ]; then
+    echo "Fehler: Diese Abhängigkeiten fehlen weiterhin: ${missing[*]}"
+    echo "Bitte installieren Sie diese manuell und starten Sie setup.sh erneut."
+    return 1
+  fi
+
+  return 0
+}
 
 echo "Willkommen zum Setup-Skript!"
 
@@ -85,7 +132,7 @@ sudo chmod 600 /root/.mailcow-gpg-pass
 echo "Das GPG-Passwort wurde sicher in /root/.mailcow-gpg-pass gespeichert."
 
 # Prüfen, ob bestehende Konfigurationen überschrieben werden sollen
-if [ -f "$CONFIG_DIR/ftp-config.sh.gpg" ] || [ -f "$CONFIG_DIR/webdav-config.sh.gpg" ]; then
+if [ -f "$CONFIG_DIR/ftp-config.sh.gpg" ] || [ -f "$CONFIG_DIR/webdav-config.sh.gpg" ] || [ -f "$CONFIG_DIR/nas-config.sh.gpg" ] || [ -f "$CONFIG_DIR/s3-config.sh.gpg" ]; then
   echo "Es existieren bereits Konfigurationsdateien. Möchten Sie diese überschreiben? (y/n)"
   read -p "Eingabe: " overwrite
   if [ "$overwrite" != "y" ]; then
@@ -108,6 +155,7 @@ echo "3) Beide"
 read -p "Bitte wählen Sie eine Option (1, 2 oder 3): " export_option
 
 if [ "$export_option" == "1" ] || [ "$export_option" == "3" ]; then
+    ensure_dependencies "WebDAV" gpg curl || exit 1
     echo "Sie haben WebDAV gewählt."
     echo "Bitte geben Sie die WebDAV-URL ein (z. B. https://webdav-server/path/):"
     read -p "WebDAV-URL: " webdav_url
@@ -133,22 +181,45 @@ if [ "$export_option" == "1" ] || [ "$export_option" == "3" ]; then
 fi
 
 if [ "$export_option" == "2" ] || [ "$export_option" == "3" ]; then
-    echo "Sie haben FTP gewählt."
-    echo "Bitte geben Sie die FTP-Server-Adresse ein:"
-    read -p "FTP-Server: " ftp_server
-    echo "Bitte geben Sie Ihren FTP-Benutzernamen ein:"
+    ensure_dependencies "FTP/SFTP" gpg curl || exit 1
+    echo "Sie haben FTP/SFTP gewählt."
+    echo "Welches Protokoll möchten Sie verwenden?"
+    echo "1) FTP"
+    echo "2) SFTP"
+    read -p "Bitte wählen Sie eine Option (1 oder 2): " ftp_protocol_option
+
+    case "$ftp_protocol_option" in
+      2)
+        ftp_protocol="sftp"
+        ;;
+      *)
+        ftp_protocol="ftp"
+        ;;
+    esac
+
+    echo "Bitte geben Sie die Server-Adresse ein (ohne Protokoll, z. B. backup.example.com):"
+    read -p "Server: " ftp_server
+    echo "Bitte geben Sie den Upload-Zielpfad ein (z. B. /mailcow-backups):"
+    read -p "Upload-Pfad: " ftp_upload_dir
+    echo "Bitte geben Sie Ihren Benutzernamen ein:"
     read -p "Benutzername: " ftp_user
-    echo "Bitte geben Sie Ihr FTP-Passwort ein:"
+    echo "Bitte geben Sie Ihr Passwort ein:"
     read -s -p "Passwort: " ftp_password
-    echo "Bitte geben Sie den Fingerabdruck des FTP-Zertifikats ein:"
-    read -p "Zertifikat-Fingerabdruck: " ftp_certificate_fingerprint
+
+    ftp_certificate_fingerprint=""
+    if [ "$ftp_protocol" = "ftp" ]; then
+      echo "Optional: Bitte geben Sie den Fingerabdruck des FTP-Zertifikats ein (oder leer lassen):"
+      read -p "Zertifikat-Fingerabdruck: " ftp_certificate_fingerprint
+    fi
     echo
 
     # Vorherige unverschlüsselte Datei löschen, falls vorhanden
     rm -f "$CONFIG_DIR/ftp-config.sh"
 
     # Speichere die FTP-Konfiguration
-    echo "FTP_SERVER=\"$ftp_server\"" > "$CONFIG_DIR/ftp-config.sh"
+    echo "FTP_PROTOCOL=\"$ftp_protocol\"" > "$CONFIG_DIR/ftp-config.sh"
+    echo "FTP_SERVER=\"$ftp_server\"" >> "$CONFIG_DIR/ftp-config.sh"
+    echo "FTP_UPLOAD_DIR=\"$ftp_upload_dir\"" >> "$CONFIG_DIR/ftp-config.sh"
     echo "FTP_USER=\"$ftp_user\"" >> "$CONFIG_DIR/ftp-config.sh"
     echo "FTP_PASSWORD=\"$ftp_password\"" >> "$CONFIG_DIR/ftp-config.sh"
     echo "FTP_CERTIFICATE_FINGERPRINT=\"$ftp_certificate_fingerprint\"" >> "$CONFIG_DIR/ftp-config.sh"
@@ -159,6 +230,57 @@ if [ "$export_option" == "2" ] || [ "$export_option" == "3" ]; then
     echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/ftp-config.sh.gpg" "$CONFIG_DIR/ftp-config.sh"
     rm -f "$CONFIG_DIR/ftp-config.sh"
 fi
+
+  echo "Möchten Sie einen NAS-Upload einrichten? (y/n)"
+  read -p "Eingabe: " nas_config_choice
+  if [ "$nas_config_choice" == "y" ]; then
+    ensure_dependencies "NAS" gpg mountpoint || exit 1
+    echo "Bitte geben Sie den lokalen Mount-Pfad des NAS ein (z. B. /mnt/backup-nas):"
+    read -p "NAS-Mount-Pfad: " nas_mount_path
+    echo "Bitte geben Sie den Zielordner auf dem NAS ein (z. B. /mailcow):"
+    read -p "NAS-Zielordner: " nas_upload_dir
+
+    rm -f "$CONFIG_DIR/nas-config.sh"
+    echo "NAS_MOUNT_PATH=\"$nas_mount_path\"" > "$CONFIG_DIR/nas-config.sh"
+    echo "NAS_UPLOAD_DIR=\"$nas_upload_dir\"" >> "$CONFIG_DIR/nas-config.sh"
+    echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/nas-config.sh"
+    echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/nas-config.sh"
+
+    echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/nas-config.sh.gpg" "$CONFIG_DIR/nas-config.sh"
+    rm -f "$CONFIG_DIR/nas-config.sh"
+  fi
+
+  echo "Möchten Sie einen S3-Upload einrichten? (y/n)"
+  read -p "Eingabe: " s3_config_choice
+  if [ "$s3_config_choice" == "y" ]; then
+    ensure_dependencies "S3" gpg aws || exit 1
+    echo "Bitte geben Sie den S3-Bucket-Namen ein (z. B. mein-backup-bucket):"
+    read -p "S3-Bucket: " s3_bucket
+    echo "Optional: S3-Prefix im Bucket (z. B. mailcow, leer lassen für Root):"
+    read -p "S3-Prefix: " s3_prefix
+    echo "Optional: S3-Endpoint für S3-kompatible Dienste (z. B. https://s3.eu-central-1.amazonaws.com):"
+    read -p "S3-Endpoint: " s3_endpoint
+    echo "Bitte geben Sie die AWS Access Key ID ein:"
+    read -p "Access Key ID: " aws_access_key_id
+    echo "Bitte geben Sie den AWS Secret Access Key ein:"
+    read -s -p "Secret Access Key: " aws_secret_access_key
+    echo
+    echo "Bitte geben Sie die AWS Region ein (z. B. eu-central-1):"
+    read -p "Region: " aws_region
+
+    rm -f "$CONFIG_DIR/s3-config.sh"
+    echo "S3_BUCKET=\"$s3_bucket\"" > "$CONFIG_DIR/s3-config.sh"
+    echo "S3_PREFIX=\"$s3_prefix\"" >> "$CONFIG_DIR/s3-config.sh"
+    echo "S3_ENDPOINT=\"$s3_endpoint\"" >> "$CONFIG_DIR/s3-config.sh"
+    echo "AWS_ACCESS_KEY_ID=\"$aws_access_key_id\"" >> "$CONFIG_DIR/s3-config.sh"
+    echo "AWS_SECRET_ACCESS_KEY=\"$aws_secret_access_key\"" >> "$CONFIG_DIR/s3-config.sh"
+    echo "AWS_DEFAULT_REGION=\"$aws_region\"" >> "$CONFIG_DIR/s3-config.sh"
+    echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/s3-config.sh"
+    echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/s3-config.sh"
+
+    echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/s3-config.sh.gpg" "$CONFIG_DIR/s3-config.sh"
+    rm -f "$CONFIG_DIR/s3-config.sh"
+  fi
 
 # Systemd-Timer für Backup einrichten
 echo "Wie häufig soll das Backup ausgeführt werden?"
@@ -344,5 +466,135 @@ EOF
   sudo systemctl daemon-reload
   sudo systemctl enable --now mailcow-webdav-upload.timer
 fi
+
+# Systemd-Timer für NAS-Upload einrichten
+if [ -f "$CONFIG_DIR/nas-config.sh.gpg" ]; then
+echo "Möchten Sie einen automatischen NAS-Upload einrichten? (y/n)"
+read -p "Eingabe: " nas_upload_choice
+if [ "$nas_upload_choice" == "y" ]; then
+    echo "Wie häufig soll der NAS-Upload ausgeführt werden?"
+    echo "1) Täglich"
+    echo "2) Wöchentlich"
+    echo "3) Monatlich"
+    read -p "Bitte wählen Sie eine Option (1, 2 oder 3): " nas_frequency
+
+    case $nas_frequency in
+      1)
+        echo "Bitte geben Sie die Uhrzeit für den täglichen NAS-Upload an (z. B. 05:00):"
+        read -p "NAS-Upload-Zeit: " nas_upload_time
+        nas_schedule="*-*-* ${nas_upload_time}:00"
+        ;;
+      2)
+        echo "Bitte geben Sie den Wochentag und die Uhrzeit für den wöchentlichen NAS-Upload an (z. B. Sun 05:00):"
+        read -p "NAS-Upload-Zeit: " nas_upload_time
+        nas_schedule="${nas_upload_time}:00"
+        ;;
+      3)
+        echo "Bitte geben Sie den Tag des Monats und die Uhrzeit für den monatlichen NAS-Upload an (z. B. 1 05:00):"
+        read -p "NAS-Upload-Zeit: " nas_upload_time
+        nas_schedule="*-*-${nas_upload_time}:00"
+        ;;
+      *)
+        echo "Ungültige Auswahl. Standardmäßig wird der NAS-Upload täglich um 05:00 ausgeführt."
+        nas_schedule="*-*-* 05:00:00"
+        ;;
+    esac
+
+    cat <<EOF | sudo tee /etc/systemd/system/mailcow-nas-upload.service
+[Unit]
+Description=Mailcow NAS Upload Script
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash $NAS_UPLOAD_SCRIPT
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    cat <<EOF | sudo tee /etc/systemd/system/mailcow-nas-upload.timer
+[Unit]
+Description=Run Mailcow NAS Upload
+
+[Timer]
+OnCalendar=$nas_schedule
+Persistent=true
+Unit=mailcow-nas-upload.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now mailcow-nas-upload.timer
+fi
+  fi
+
+# Systemd-Timer für S3-Upload einrichten
+  if [ -f "$CONFIG_DIR/s3-config.sh.gpg" ]; then
+  echo "Möchten Sie einen automatischen S3-Upload einrichten? (y/n)"
+  read -p "Eingabe: " s3_upload_choice
+  if [ "$s3_upload_choice" == "y" ]; then
+    echo "Wie häufig soll der S3-Upload ausgeführt werden?"
+    echo "1) Täglich"
+    echo "2) Wöchentlich"
+    echo "3) Monatlich"
+    read -p "Bitte wählen Sie eine Option (1, 2 oder 3): " s3_frequency
+
+    case $s3_frequency in
+      1)
+        echo "Bitte geben Sie die Uhrzeit für den täglichen S3-Upload an (z. B. 06:00):"
+        read -p "S3-Upload-Zeit: " s3_upload_time
+        s3_schedule="*-*-* ${s3_upload_time}:00"
+        ;;
+      2)
+        echo "Bitte geben Sie den Wochentag und die Uhrzeit für den wöchentlichen S3-Upload an (z. B. Sun 06:00):"
+        read -p "S3-Upload-Zeit: " s3_upload_time
+        s3_schedule="${s3_upload_time}:00"
+        ;;
+      3)
+        echo "Bitte geben Sie den Tag des Monats und die Uhrzeit für den monatlichen S3-Upload an (z. B. 1 06:00):"
+        read -p "S3-Upload-Zeit: " s3_upload_time
+        s3_schedule="*-*-${s3_upload_time}:00"
+        ;;
+      *)
+        echo "Ungültige Auswahl. Standardmäßig wird der S3-Upload täglich um 06:00 ausgeführt."
+        s3_schedule="*-*-* 06:00:00"
+        ;;
+    esac
+
+    cat <<EOF | sudo tee /etc/systemd/system/mailcow-s3-upload.service
+[Unit]
+Description=Mailcow S3 Upload Script
+
+[Service]
+Type=oneshot
+ExecStart=/bin/bash $S3_UPLOAD_SCRIPT
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    cat <<EOF | sudo tee /etc/systemd/system/mailcow-s3-upload.timer
+[Unit]
+Description=Run Mailcow S3 Upload
+
+[Timer]
+OnCalendar=$s3_schedule
+Persistent=true
+Unit=mailcow-s3-upload.service
+
+[Install]
+WantedBy=timers.target
+EOF
+
+    sudo systemctl daemon-reload
+    sudo systemctl enable --now mailcow-s3-upload.timer
+fi
+  fi
 
 echo "Setup abgeschlossen! Die systemd-Timer wurden erfolgreich eingerichtet."

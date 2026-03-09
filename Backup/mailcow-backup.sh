@@ -6,6 +6,15 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+# Benötigte Abhängigkeiten prüfen
+for cmd in gpg tar; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "❌ Fehler: Abhängigkeit '$cmd' fehlt."
+    echo "Bitte führen Sie 'sudo ./Dependencies/install_dependencies.sh' aus."
+    exit 1
+  fi
+done
+
 # Konfigurationsdatei entschlüsseln und laden
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$SCRIPT_DIR/../Configs"
