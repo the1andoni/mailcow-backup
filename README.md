@@ -189,7 +189,7 @@ The backup script automatically reads this password and decrypts the configurati
 
   **Downgrade protection:**
   - Allowed upgrade path: `V2-LEGACY -> V3 -> main`
-  - Downgrades are blocked (for example `V3 -> V2-LEGACY`)
+  - Downgrades are blocked, except `main -> V3` (with confirmation prompt)
 
   The update script:
   - Shows changes in update.sh first (Phase 1)
@@ -496,7 +496,7 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
 
   **Downgrade-Schutz:**
   - Erlaubter Upgrade-Pfad: `V2-LEGACY -> V3 -> main`
-  - Downgrades sind blockiert (z. B. `V3 -> V2-LEGACY`)
+  - Downgrades sind blockiert, außer `main -> V3` (mit Sicherheitsabfrage)
 
   Das Update-Skript:
   - Zeigt zuerst Änderungen in update.sh (Phase 1)

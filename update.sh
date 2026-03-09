@@ -20,7 +20,7 @@ show_usage() {
     echo ""
     echo "Rules:"
     echo "  - Upgrades are allowed (V2-LEGACY -> V3 -> main)"
-    echo "  - Downgrades are blocked (for example V3 -> V2-LEGACY)"
+    echo "  - Downgrades are blocked (exception: main -> V3 is allowed with confirmation)"
 }
 
 # Function: Map branch names to version ranks
@@ -157,12 +157,30 @@ echo "Current branch: $CURRENT_BRANCH"
 if [ -n "$TARGET_BRANCH" ] && [ "$TARGET_BRANCH" != "$CURRENT_BRANCH" ]; then
     CURRENT_RANK=$(branch_rank "$CURRENT_BRANCH")
     TARGET_RANK=$(branch_rank "$TARGET_BRANCH")
+    ALLOW_SPECIAL_DOWNGRADE=false
+
+    # Allow a controlled downgrade from main to V3.
+    if [ "$CURRENT_BRANCH" = "main" ] && [ "$TARGET_BRANCH" = "V3" ]; then
+        ALLOW_SPECIAL_DOWNGRADE=true
+    fi
 
     # Block downgrades between known release branches
-    if [ "$CURRENT_RANK" -gt 0 ] && [ "$TARGET_RANK" -gt 0 ] && [ "$TARGET_RANK" -lt "$CURRENT_RANK" ]; then
+    if [ "$CURRENT_RANK" -gt 0 ] && [ "$TARGET_RANK" -gt 0 ] && [ "$TARGET_RANK" -lt "$CURRENT_RANK" ] && [ "$ALLOW_SPECIAL_DOWNGRADE" != true ]; then
         echo "Error: Downgrade not allowed: $CURRENT_BRANCH -> $TARGET_BRANCH"
         echo "Allowed upgrade path: V2-LEGACY -> V3 -> main"
+        echo "Allowed downgrade exception: main -> V3"
         exit 1
+    fi
+
+    if [ "$ALLOW_SPECIAL_DOWNGRADE" = true ]; then
+        echo "⚠️  You requested a downgrade from main to V3."
+        echo "   This is supported, but local custom changes may need manual adjustment afterwards."
+        read -p "Continue with downgrade to V3? (y/N) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo "Downgrade cancelled."
+            exit 0
+        fi
     fi
 
     echo "Requested target branch: $TARGET_BRANCH"

@@ -15,7 +15,7 @@
   - New flags: `--main`, `--v3`, `--v2`
   - Supported shortcuts: `main`, `V3`/`v3`, `V2`/`v2`
   - Explicit upgrade path enforcement: `V2-LEGACY -> V3 -> main`
-  - Downgrades are blocked (for example `main -> V3` or `V3 -> V2-LEGACY`)
+  - Downgrades are blocked, except `main -> V3` (with confirmation prompt)
   - `--help` now includes version flag usage and upgrade/downgrade rules
 
 Example usage:
