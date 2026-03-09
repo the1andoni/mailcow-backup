@@ -12,7 +12,7 @@ A Bash script for backing up mailcow data with support for WebDAV, FTP/SFTP, NAS
 ### 📁 Folder Structure
 
 ```
-mailcow-BackupV2/
+mailcow-backup/
 ├── setup.sh
 ├── update.sh
 ├── Backup/
@@ -60,8 +60,8 @@ mailcow-BackupV2/
 1. **Download Repository**:
 
    ```bash
-   git clone https://github.com/the1andoni/mailcow-backupV2.git 
-   cd mailcow-backupV2
+   git clone https://github.com/the1andoni/mailcow-backup.git 
+   cd mailcow-backup
    ```
    
    Scripts will automatically be made executable during setup.
@@ -69,7 +69,7 @@ mailcow-BackupV2/
    Alternatively, a Debian package is available for download:
 
    ```bash
-   wget https://github.com/the1andoni/mailcow-backupV2/releases/download/v2.0.0/mailcow-backup-v2.deb
+   wget https://github.com/the1andoni/mailcow-backup/releases/download/v3.0.0/mailcow-backup_3.0.0_all.deb
    ```
 
 2. **Install Dependencies** (optional):
@@ -250,7 +250,7 @@ Ein Bash-Skript zur Sicherung von mailcow-Daten mit Unterstützung für WebDAV-,
 ### 📁 Ordnerstruktur
 
 ```
-mailcow-BackupV2/
+mailcow-backup/
 ├── setup.sh
 ├── update.sh
 ├── Backup/
@@ -298,8 +298,8 @@ mailcow-BackupV2/
 1. **Repository herunterladen**:
 
    ```bash
-   git clone https://github.com/the1andoni/mailcow-backupV2.git 
-   cd mailcow-backupV2
+   git clone https://github.com/the1andoni/mailcow-backup.git 
+   cd mailcow-backup
    ```
    
    Die Scripte werden automatisch beim Setup ausführbar gemacht.
@@ -307,7 +307,7 @@ mailcow-BackupV2/
    Alternativ steht ein Debian Paket zum Download zur Verfügung:
 
    ```bash
-   wget https://github.com/the1andoni/mailcow-backupV2/releases/download/v2.0.0/mailcow-backup-v2.deb
+   wget https://github.com/the1andoni/mailcow-backup/releases/download/v3.0.0/mailcow-backup_3.0.0_all.deb
    ```
 
 2. **Abhängigkeiten installieren** (optional):
