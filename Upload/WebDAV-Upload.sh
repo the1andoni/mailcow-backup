@@ -1,71 +1,63 @@
 #!/bin/bash
 
-# Überprüfen, ob das Skript mit sudo ausgeführt wird
+# Check if script is run with sudo
 if [ "$EUID" -ne 0 ]; then
-  echo "Bitte führen Sie dieses Skript mit sudo aus."
+  echo "Please run this script with sudo."
   exit 1
 fi
 
-# Konfigurationsdatei entschlüsseln und laden
+# Ensure backup is completed
+if [ ! -f /tmp/mailcow-backup.status ]; then
+  echo "❌ Error: Backup not yet completed!"
+  exit 1
+fi
+
+# Check required dependencies
+for cmd in gpg curl; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "❌ Error: Dependency '$cmd' is missing."
+    echo "Please run 'sudo ./Dependencies/install_dependencies.sh'."
+    exit 1
+  fi
+done
+
+# Decrypt and load configuration file
 CONFIG_DIR="$(dirname "$0")/../Configs"
-echo "Bitte geben Sie das GPG-Passwort ein:"
-read -s -p "Passwort: " gpg_password
-echo
+GPG_PASS_FILE="/root/.mailcow-gpg-pass"
+if [ ! -f "$GPG_PASS_FILE" ]; then
+  echo "❌ Error: GPG password file $GPG_PASS_FILE not found!"
+  exit 1
+fi
+gpg_password=$(cat "$GPG_PASS_FILE")
 source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/webdav-config.sh.gpg")
 
-# Variablen
+# Variables
 BACKUP_DIR="/backup/mailcow"
-DATE=$(date +"%Y-%m-%d_%H-%M-%S")
-TAR_FILE="$BACKUP_DIR/mailcow-backup-$DATE.tar.gz"
+LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.tar.gz | head -n 1)
 
-# Sicherstellen, dass das Backup-Verzeichnis existiert
-sudo mkdir -p "$BACKUP_DIR"
+# Check if backup exists
+if [ ! -f "$LATEST_BACKUP" ]; then
+  echo "❌ Error: No backup found!"
+  exit 1
+fi
 
-# Backup auf WebDAV hochladen
-echo "[+] Lade Backup auf WebDAV-Server hoch..."
-UPLOAD_RESPONSE=$(curl -u "$WEBDAV_USER:$WEBDAV_PASSWORD" -T "$TAR_FILE" "$WEBDAV_URL" --silent --write-out "%{http_code}")
+# Upload backup to WebDAV
+echo "[+] Uploading backup to WebDAV server..."
+UPLOAD_RESPONSE=$(curl -u "$WEBDAV_USER:$WEBDAV_PASSWORD" -T "$LATEST_BACKUP" "$WEBDAV_URL" --silent --write-out "%{http_code}")
 
-# Prüfen, ob der Upload erfolgreich war
+# Check if upload was successful
 if [ "$UPLOAD_RESPONSE" -eq 201 ] || [ "$UPLOAD_RESPONSE" -eq 204 ]; then
-    echo "[✅] Backup erfolgreich auf WebDAV-Server hochgeladen!"
+  echo "[✅] Backup successfully uploaded to WebDAV server!"
 else
-    echo "❌ Fehler: Upload fehlgeschlagen (HTTP-Code: $UPLOAD_RESPONSE)"
-    exit 1
+  echo "❌ Error: Upload failed (HTTP code: $UPLOAD_RESPONSE)"
+  exit 1
 fi
 
-# Alte Backups lokal löschen
+# Delete old local backups
 if [ -n "$LOCAL_RETENTION" ]; then
-    echo "[+] Lösche lokale Backups, die älter als $LOCAL_RETENTION Tage sind..."
-    find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
-    echo "[✅] Alte lokale Backups erfolgreich gelöscht."
+  echo "[+] Deleting local backups older than $LOCAL_RETENTION days..."
+  find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
+  echo "[✅] Old local backups successfully deleted."
 else
-    echo "[⚠️] Kein Löschintervall für lokale Backups definiert. Es werden keine alten Backups gelöscht."
-fi
-
-# Alte Backups auf dem WebDAV-Server löschen
-if [ -n "$REMOTE_RETENTION" ]; then
-    echo "[+] Lösche Backups auf dem WebDAV-Server, die älter als $REMOTE_RETENTION Tage sind..."
-    # Liste Dateien auf dem WebDAV-Server
-    curl -u "$WEBDAV_USER:$WEBDAV_PASSWORD" -X PROPFIND --data '<?xml version="1.0"?>
-    <d:propfind xmlns:d="DAV:">
-      <d:prop>
-        <d:getlastmodified/>
-      </d:prop>
-    </d:propfind>' "$WEBDAV_URL" --silent | grep -oP '(?<=<d:href>).*?(?=</d:href>)' | while read -r file; do
-        # Extrahiere das Änderungsdatum der Datei
-        file_date=$(curl -u "$WEBDAV_USER:$WEBDAV_PASSWORD" -I "$WEBDAV_URL$file" --silent | grep -i "Last-Modified" | awk '{print $3, $4, $5}')
-        if [ -n "$file_date" ]; then
-            # Berechne das Alter der Datei
-            file_timestamp=$(date -d "$file_date" +%s)
-            current_timestamp=$(date +%s)
-            age_days=$(( (current_timestamp - file_timestamp) / 86400 ))
-            if [ "$age_days" -gt "$REMOTE_RETENTION" ]; then
-                echo "[+] Lösche Datei: $file (Alter: $age_days Tage)"
-                curl -u "$WEBDAV_USER:$WEBDAV_PASSWORD" -X DELETE "$WEBDAV_URL$file"
-            fi
-        fi
-    done
-    echo "[✅] Alte Backups auf dem WebDAV-Server erfolgreich gelöscht."
-else
-    echo "[⚠️] Kein Löschintervall für Remote-Backups definiert. Es werden keine alten Backups gelöscht."
+  echo "[⚠️] No retention interval defined for local backups. No old backups will be deleted."
 fi

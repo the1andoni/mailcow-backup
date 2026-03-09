@@ -1,0 +1,50 @@
+CyberSpaceConsulting Public License v1.0
+
+Copyright (c) 2025 CyberSpaceConsulting – the1andoni
+
+Note: "CyberSpaceConsulting" is the operating name of the business entity under which this software is maintained.  
+This repository is managed by the1andoni, or any officially authorized developer acting on behalf of CyberSpaceConsulting.  
+The1andoni or any other authorized developer(s) are responsible for the development and maintenance of this repository.
+
+Permission is hereby granted, free of charge, to any individual or organization
+to use, modify, and deploy this Software for private, educational, or internal commercial purposes,
+under the following conditions:
+
+1. **No Resale or Redistribution**  
+   The Software, whether in original or modified form, must not be sold, sublicensed, or publicly redistributed 
+   without prior written permission from CyberSpaceConsulting.
+
+2. **Centralized Management**  
+   All official public versions and updates of this Software are to be managed through the original repository in which this license was initially published.  
+   Forks may be created for private or internal use only. Public forks, mirrors, or redistributions require prior written permission from CyberSpaceConsulting.
+
+3. **Attribution Required**  
+   Any use or deployment of this Software must retain this license and clearly state the origin of the project as:  
+   "CyberSpaceConsulting – Original source available at the official repository."
+
+4. **Commercial Use Allowed (with Restrictions)**  
+   The Software may be used in commercial contexts (e.g., internally within businesses),  
+   provided it is not resold or repackaged as a product or service offering.
+
+5. **No Warranty**  
+   This Software is provided "as is", without any warranties or guarantees.  
+   CyberSpaceConsulting is not liable for any damages or losses arising from its use.
+
+6. **Prohibited Use in AI Training**  
+   The Software may not be used, in whole or in part, for the training or fine-tuning of machine learning or artificial intelligence models without explicit permission from CyberSpaceConsulting.
+
+7. **No Use in Closed-Source Commercial Products**  
+   The Software may not be included in proprietary, closed-source commercial products, unless explicitly licensed by CyberSpaceConsulting.
+
+8. **License Version**  
+   This license applies as version 1.0. CyberSpaceConsulting reserves the right to release future versions.  
+   Existing users may continue to use version 1.0 unless explicitly stated otherwise.
+
+9. **Confidential Use**  
+   If the Software is used to process, store, or manage sensitive data (e.g., user data, credentials, backups), the user is solely responsible for ensuring compliance with relevant data protection laws.  
+   CyberSpaceConsulting assumes no responsibility for misuse.
+
+---
+
+For permissions beyond this license, please contact:  
+📧 license@cyberspaceconsulting.de

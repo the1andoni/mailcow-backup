@@ -2,5 +2,6 @@ gpg
 curl
 cron
 tar
+awscli
 
 
