@@ -13,6 +13,7 @@ A Bash script for backing up mailcow data with support for WebDAV, FTP/SFTP, NAS
 
 ```
 mailcow-backup/
+├── mailcow-backup.sh
 ├── setup.sh
 ├── update.sh
 ├── Backup/
@@ -21,12 +22,10 @@ mailcow-backup/
 │   ├── dependencies.txt
 │   └── install_dependencies.sh
 ├── Configs/
-│   └── (encrypted configuration files)
-└── Upload/
-    ├── FTP-Upload.sh
-    ├── NAS-Upload.sh
-    ├── S3-Upload.sh
-    └── WebDAV-Upload.sh
+│   └── (verschlüsselte Konfigurationsdateien)
+└── Upload/  
+     ├── FTP-Upload.sh  
+     └── WebDAV-Upload.sh
 ```
 
 ### ✨ Features
@@ -57,11 +56,10 @@ mailcow-backup/
 
 ### 🚀 Installation
 
-1. **Download Repository**:
+   Sie können das Repository mithilfe von Git Clone einfach runterladen.
 
    ```bash
    git clone https://github.com/the1andoni/mailcow-backup.git 
-   cd mailcow-backup
    ```
    
    Scripts will automatically be made executable during setup.
@@ -69,7 +67,7 @@ mailcow-backup/
    Alternatively, a Debian package is available for download:
 
    ```bash
-   wget https://github.com/the1andoni/mailcow-backup/releases/download/v3.0.0/mailcow-backup_3.0.0_all.deb
+   chmod +x mailcow-backup/**/*.sh
    ```
 
 2. **Install Dependencies** (optional):
