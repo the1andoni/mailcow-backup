@@ -1,8 +1,253 @@
 # mailcow Backup Script V2
 
+[🇬🇧 English](#english) | [🇩🇪 Deutsch](#deutsch)
+
+---
+
+<a name="english"></a>
+## 🇬🇧 English
+
+A Bash script for backing up mailcow data with support for WebDAV, FTP/SFTP, NAS, and S3 uploads. This project enables automated backups, encryption, and remote server uploads.
+
+### 📁 Folder Structure
+
+```
+mailcow-BackupV2/
+├── setup.sh
+├── update.sh
+├── Backup/
+│   └── mailcow-backup.sh
+├── Dependencies/
+│   ├── dependencies.txt
+│   └── install_dependencies.sh
+├── Configs/
+│   └── (encrypted configuration files)
+└── Upload/
+    ├── FTP-Upload.sh
+    ├── NAS-Upload.sh
+    ├── S3-Upload.sh
+    └── WebDAV-Upload.sh
+```
+
+### ✨ Features
+
+- **Automated Backups**: Creates backups of mailcow data
+- **Encryption**: Configuration files are encrypted with GPG (AES256)
+- **Flexible Upload Options**: Supports WebDAV, FTP/SFTP, NAS (LAN), and S3-compatible storage
+- **Automatic Dependency Check**: Setup and upload scripts verify required tools and offer installation
+- **Two-Phase Self-Update**: Update script updates itself first, then the rest of the repository
+- **Systemd Timer Integration**: Automatic scheduling of backups and uploads
+- **Retention Management**: Deletes old backups locally and remotely based on defined retention periods
+- **Service Repair**: Automatically repairs systemd service paths after updates
+
+### 📋 Prerequisites
+
+- **Operating System**: Linux (Debian/Ubuntu recommended)
+- **Basic Dependencies** (for all features):
+  - `gpg` - GPG encryption
+  - `tar` - Archiving
+  - `systemd` - Timer management
+
+- **Upload-specific Dependencies**:
+  - **WebDAV/FTP/SFTP**: `curl`
+  - **S3**: `awscli` (AWS CLI)
+  - **NAS**: `mountpoint` (usually pre-installed)
+
+**Note**: The setup script automatically checks for missing dependencies and offers installation.
+
+### 🚀 Installation
+
+1. **Download Repository**:
+
+   ```bash
+   git clone https://github.com/the1andoni/mailcow-backupV2.git 
+   cd mailcow-backupV2
+   ```
+   
+   Scripts will automatically be made executable during setup.
+
+   Alternatively, a Debian package is available for download:
+
+   ```bash
+   wget https://github.com/the1andoni/mailcow-backupV2/releases/download/v2.0.0/mailcow-backup-v2.deb
+   ```
+
+2. **Install Dependencies** (optional):
+
+   You can install dependencies in advance or let the setup script check and install them automatically:
+
+   ```bash
+   sudo ./Dependencies/install_dependencies.sh
+   ```
+
+   Or manually:
+
+   ```bash
+   sudo xargs -a Dependencies/dependencies.txt apt install -y
+   ```
+
+3. **Run Setup**:
+
+   Start the setup script to create configurations and set up systemd timers:
+
+   ```bash
+   sudo ./setup.sh
+   ```
+
+   **The setup script performs the following steps**:
+   - Automatically checks for available updates
+   - Verifies required dependencies for selected upload methods
+   - Offers installation of missing tools
+   - Configures selected backup methods (WebDAV/FTP/SFTP/NAS/S3)
+   - Sets up systemd timers for automated backups
+
+### 🔐 Automated Backups & GPG Password
+
+For scheduled backups and uploads to work without interaction, the GPG password is automatically saved during setup in a file (`/root/.mailcow-gpg-pass`).
+
+**Warning:** The file is only readable by root and is created by the setup script as follows:
+
+```bash
+echo "YOUR_GPG_PASSWORD" | sudo tee /root/.mailcow-gpg-pass > /dev/null
+sudo chmod 600 /root/.mailcow-gpg-pass
+```
+
+The backup script automatically reads this password and decrypts the configuration.  
+**Note:** Only change the password in this file if you also re-encrypt the configuration!
+
+### 🎯 Usage
+
+- **Install Updates**:
+
+  ```bash
+  sudo ./update.sh
+  ```
+
+  The update script:
+  - Shows changes in update.sh first (Phase 1)
+  - Updates itself and restarts if needed
+  - Shows all changes in the repository (Phase 2)
+  - Asks for confirmation before applying updates
+  - Makes all scripts executable
+  - Repairs systemd services automatically
+
+- **Manual Backup**:
+
+  ```bash
+  sudo ./Backup/mailcow-backup.sh
+  ```
+
+- **Manual WebDAV Upload**:
+
+  ```bash
+  sudo ./Upload/WebDAV-Upload.sh
+  ```
+
+- **Manual FTP/SFTP Upload**:
+
+  ```bash
+  sudo ./Upload/FTP-Upload.sh
+  ```
+
+- **Manual NAS Upload**:
+
+  ```bash
+  sudo ./Upload/NAS-Upload.sh
+  ```
+
+- **Manual S3 Upload**:
+
+  ```bash
+  sudo ./Upload/S3-Upload.sh
+  ```
+
+- **Manage Systemd Timers**:
+  - **Check status**:
+    ```bash
+    systemctl status mailcow-backup.timer
+    systemctl status mailcow-webdav-upload.timer
+    systemctl status mailcow-ftp-upload.timer
+    systemctl status mailcow-nas-upload.timer
+    systemctl status mailcow-s3-upload.timer
+    ```
+  - **Start manually**:
+    ```bash
+    systemctl start mailcow-backup.service
+    ```
+  - **Disable**:
+    ```bash
+    systemctl disable mailcow-backup.timer
+    ```
+
+### ⚙️ Configuration
+
+Configuration files are created during setup and stored encrypted in the `Configs` folder. They contain sensitive information such as credentials and should never be stored unencrypted.
+
+### 📤 Upload Methods Explained
+
+#### WebDAV
+- HTTPS-based upload
+- Compatible with Nextcloud, ownCloud, HiDrive, etc.
+- **Requires**: `curl`, `gpg`
+
+#### FTP/SFTP
+- **FTP**: Optional with TLS and certificate fingerprint pinning
+- **SFTP**: Secure SSH-based transfer
+- **Requires**: `curl`, `gpg`
+
+#### NAS (Network Storage)
+- Local or LAN-based NAS
+- Expects mounted directory (e.g., via SMB/CIFS or NFS)
+- **Requires**: `mountpoint`, `gpg`
+- **Setup**: Mount your NAS before running the script
+
+#### S3 (Cloud Storage)
+- AWS S3 and S3-compatible services (Wasabi, MinIO, Backblaze B2)
+- Lifecycle rules for automatic retention recommended
+- **Requires**: `awscli`, `gpg`
+- **Note**: Remote retention should be configured via bucket lifecycle rules
+
+### 🔒 Security
+
+- **Encryption**: All configuration files are encrypted with GPG (AES256)
+- **Password Management**: GPG password is securely stored in `/root/.mailcow-gpg-pass` (only readable by root)
+- **FTP-TLS**: Optional certificate pinning for secure FTP connections
+- **SFTP**: Uses SSH authentication via `curl`
+- **Dependency Checks**: All scripts verify required tools before execution
+- **Status Flags**: Upload scripts check for backup completion before uploading
+
+### 🔄 Backup Workflow
+
+1. **Backup Script** (`mailcow-backup.sh`) runs:
+   - Creates timestamped `.tar.gz` archive
+   - Sets completion flag: `/tmp/mailcow-backup.status`
+   - Deletes old local backups based on retention
+
+2. **Upload Scripts** check for completion:
+   - Verify `/tmp/mailcow-backup.status` exists
+   - Upload latest backup
+   - Delete old remote backups based on retention
+
+### 📜 License
+
+This project is licensed under the **CyberSpaceConsulting Public License v1.0**.  
+Full license terms can be found in the [LICENSE](LICENSE) file.
+
+#### Key License Points:
+1. **No Resale or Public Distribution**: Software may not be sold, sublicensed, or publicly distributed without prior written permission
+2. **Central Management**: All official versions and updates are managed exclusively through the original repository
+3. **Attribution Required**: "CyberSpaceConsulting – Original source available at the official repository"
+4. **Commercial Use Allowed (with Restrictions)**: May be used in commercial contexts but not resold as standalone product
+5. **No Warranty**: Software is provided "as is" without any warranties
+
+---
+
+<a name="deutsch"></a>
+## 🇩🇪 Deutsch
+
 Ein Bash-Skript zur Sicherung von mailcow-Daten mit Unterstützung für WebDAV-, FTP/SFTP-, NAS- und S3-Uploads. Dieses Projekt ermöglicht es, automatisierte Backups zu erstellen, zu verschlüsseln und auf Remote-Server hochzuladen.
 
-## Ordnerstruktur
+### 📁 Ordnerstruktur
 
 ```
 mailcow-BackupV2/
@@ -22,17 +267,18 @@ mailcow-BackupV2/
     └── WebDAV-Upload.sh
 ```
 
-## Features
+### ✨ Features
 
-- **Automatisierte Backups**: Erstellt Backups von mailcow-Daten.
-- **Verschlüsselung**: Konfigurationsdateien werden mit GPG verschlüsselt.
-- **Flexible Upload-Optionen**: Unterstützt WebDAV, FTP/SFTP, NAS (LAN) und S3-kompatible Speicher.
-- **Automatische Dependency-Prüfung**: Setup und Upload-Skripte überprüfen benötigte Tools und bieten Installation an.
-- **Systemd-Timer-Integration**: Automatische Planung von Backups und Uploads.
-- **Retention Management**: Löscht alte Backups lokal und remote basierend auf definierten Aufbewahrungszeiten.
-- **Update-Mechanismus**: Automatische Updates mit Systemd-Service-Reparatur.
+- **Automatisierte Backups**: Erstellt Backups von mailcow-Daten
+- **Verschlüsselung**: Konfigurationsdateien werden mit GPG (AES256) verschlüsselt
+- **Flexible Upload-Optionen**: Unterstützt WebDAV, FTP/SFTP, NAS (LAN) und S3-kompatible Speicher
+- **Automatische Dependency-Prüfung**: Setup und Upload-Skripte überprüfen benötigte Tools und bieten Installation an
+- **Zweiphasen Self-Update**: Update-Script aktualisiert sich zuerst selbst, dann das Repository
+- **Systemd-Timer-Integration**: Automatische Planung von Backups und Uploads
+- **Retention Management**: Löscht alte Backups lokal und remote basierend auf definierten Aufbewahrungszeiten
+- **Service-Reparatur**: Repariert automatisch systemd-Service-Pfade nach Updates
 
-## Voraussetzungen
+### 📋 Voraussetzungen
 
 - **Betriebssystem**: Linux (Debian/Ubuntu empfohlen)
 - **Grundlegende Abhängigkeiten** (für alle Funktionen):
@@ -47,11 +293,9 @@ mailcow-BackupV2/
 
 **Hinweis**: Das Setup-Skript prüft automatisch fehlende Abhängigkeiten und bietet deren Installation an.
 
-## Installation
+### 🚀 Installation
 
 1. **Repository herunterladen**:
-
-   Sie können das Repository mithilfe von GitClone einfach runterladen.
 
    ```bash
    git clone https://github.com/the1andoni/mailcow-backupV2.git 
@@ -60,7 +304,7 @@ mailcow-BackupV2/
    
    Die Scripte werden automatisch beim Setup ausführbar gemacht.
 
-   Alternativ steht ein Debian Packet zum Download zur Verfügung.
+   Alternativ steht ein Debian Paket zum Download zur Verfügung:
 
    ```bash
    wget https://github.com/the1andoni/mailcow-backupV2/releases/download/v2.0.0/mailcow-backup-v2.deb
@@ -95,9 +339,10 @@ mailcow-BackupV2/
    - Konfiguriert gewählte Backup-Methoden (WebDAV/FTP/SFTP/NAS/S3)
    - Richtet systemd-Timer für automatisierte Backups ein
 
-## Automatisierte Backups & GPG-Passwort
+### 🔐 Automatisierte Backups & GPG-Passwort
 
-Damit geplante Backups und Uploads ohne Interaktion funktionieren, wird das GPG-Passwort während des Setups automatisch in einer Datei (`/root/.mailcow-gpg-pass`) gespeichert.  
+Damit geplante Backups und Uploads ohne Interaktion funktionieren, wird das GPG-Passwort während des Setups automatisch in einer Datei (`/root/.mailcow-gpg-pass`) gespeichert.
+
 **Achtung:** Die Datei ist nur für root lesbar und wird vom Setup-Skript wie folgt angelegt:
 
 ```bash
@@ -108,7 +353,7 @@ sudo chmod 600 /root/.mailcow-gpg-pass
 Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit die Konfiguration.  
 **Hinweis:** Ändere das Passwort in dieser Datei nur, wenn du auch die Konfiguration neu verschlüsselst!
 
-## Nutzung
+### 🎯 Nutzung
 
 - **Updates installieren**:
 
@@ -116,7 +361,13 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
   sudo ./update.sh
   ```
 
-  Das Update-Skript aktualisiert das Repository, macht alle Scripts ausführbar und repariert automatisch alle systemd-Services, falls nötig.
+  Das Update-Skript:
+  - Zeigt zuerst Änderungen in update.sh (Phase 1)
+  - Aktualisiert sich selbst und startet neu falls nötig
+  - Zeigt alle Änderungen im Repository (Phase 2)
+  - Fragt vor Anwendung der Updates nach Bestätigung
+  - Macht alle Scripts ausführbar
+  - Repariert systemd-Services automatisch
 
 - **Backup manuell starten**:
 
@@ -148,10 +399,14 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
   sudo ./Upload/S3-Upload.sh
   ```
 
-- **Systemd-Timer für Backups verwalten**:
+- **Systemd-Timer verwalten**:
   - **Status überprüfen**:
     ```bash
     systemctl status mailcow-backup.timer
+    systemctl status mailcow-webdav-upload.timer
+    systemctl status mailcow-ftp-upload.timer
+    systemctl status mailcow-nas-upload.timer
+    systemctl status mailcow-s3-upload.timer
     ```
   - **Manuell starten**:
     ```bash
@@ -162,141 +417,66 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
     systemctl disable mailcow-backup.timer
     ```
 
-- **Systemd-Timer für WebDAV-Upload verwalten**:
-  - **Status überprüfen**:
-    ```bash
-    systemctl status mailcow-webdav-upload.timer
-    ```
-  - **Manuell starten**:
-    ```bash
-    systemctl start mailcow-webdav-upload.service
-    ```
-  - **Deaktivieren**:
-    ```bash
-    systemctl disable mailcow-webdav-upload.timer
-    ```
-
-- **Systemd-Timer für FTP/SFTP-Upload verwalten**:
-  - **Status überprüfen**:
-    ```bash
-    systemctl status mailcow-ftp-upload.timer
-    ```
-  - **Manuell starten**:
-    ```bash
-    systemctl start mailcow-ftp-upload.service
-    ```
-  - **Deaktivieren**:
-    ```bash
-    systemctl disable mailcow-ftp-upload.timer
-    ```
-
-- **Systemd-Timer für NAS-Upload verwalten**:
-  - **Status überprüfen**:
-    ```bash
-    systemctl status mailcow-nas-upload.timer
-    ```
-  - **Manuell starten**:
-    ```bash
-    systemctl start mailcow-nas-upload.service
-    ```
-  - **Deaktivieren**:
-    ```bash
-    systemctl disable mailcow-nas-upload.timer
-    ```
-
-- **Systemd-Timer für S3-Upload verwalten**:
-  - **Status überprüfen**:
-    ```bash
-    systemctl status mailcow-s3-upload.timer
-    ```
-  - **Manuell starten**:
-    ```bash
-    systemctl start mailcow-s3-upload.service
-    ```
-  - **Deaktivieren**:
-    ```bash
-    systemctl disable mailcow-s3-upload.timer
-    ```
-
-## Konfiguration
+### ⚙️ Konfiguration
 
 Die Konfigurationsdateien werden während des Setups erstellt und verschlüsselt im Ordner `Configs` gespeichert. Sie enthalten sensible Informationen wie Zugangsdaten und sollten niemals unverschlüsselt gespeichert werden.
 
-## Automatisierung
+### 📤 Upload-Methoden im Detail
 
-Das Setup-Skript richtet automatisch systemd-Timer ein, um Backups und Uploads regelmäßig auszuführen. Die Timer können mit den folgenden Befehlen verwaltet werden:
-
-- **Backup-Timer**:
-  ```bash
-  systemctl status mailcow-backup.timer
-  ```
-- **FTP/SFTP-Upload-Timer**:
-  ```bash
-  systemctl status mailcow-ftp-upload.timer
-  ```
-- **WebDAV-Upload-Timer**:
-  ```bash
-  systemctl status mailcow-webdav-upload.timer
-  ```
-- **NAS-Upload-Timer**:
-  ```bash
-  systemctl status mailcow-nas-upload.timer
-  ```
-- **S3-Upload-Timer**:
-  ```bash
-  systemctl status mailcow-s3-upload.timer
-  ```
-
-## Upload-Methoden im Detail
-
-### WebDAV
+#### WebDAV
 - HTTPS-basierter Upload
 - Kompatibel mit Nextcloud, ownCloud, HiDrive, etc.
 - **Benötigt**: `curl`, `gpg`
 
-### FTP/SFTP
+#### FTP/SFTP
 - **FTP**: Optional mit TLS und Zertifikat-Fingerabdruck
 - **SFTP**: Sichere SSH-basierte Übertragung
 - **Benötigt**: `curl`, `gpg`
 
-### NAS (Network Storage)
+#### NAS (Network Storage)
 - Lokales oder LAN-basiertes NAS
 - Erwartet eingehängtes Verzeichnis (z. B. via SMB/CIFS oder NFS)
 - **Benötigt**: `mountpoint`, `gpg`
+- **Setup**: Hänge dein NAS ein, bevor du das Script ausführst
 
-### S3 (Cloud Storage)
+#### S3 (Cloud Storage)
 - AWS S3 und S3-kompatible Dienste (Wasabi, MinIO, Backblaze B2)
 - Lifecycle-Regeln für automatische Retention empfohlen
 - **Benötigt**: `awscli`, `gpg`
+- **Hinweis**: Remote-Retention sollte über Bucket-Lifecycle-Regeln konfiguriert werden
 
-## Sicherheit
+### 🔒 Sicherheit
 
-- **Verschlüsselung**: Alle Konfigurationsdateien werden mit GPG (AES256) verschlüsselt.
-- **Passwort-Verwaltung**: Das GPG-Passwort wird sicher in `/root/.mailcow-gpg-pass` abgelegt (nur für root lesbar).
-- **FTP-TLS**: Optional mit Zertifikat-Pinning für sichere FTP-Verbindungen.
-- **SFTP**: Nutzt SSH-Authentifizierung über `curl`.
-- **Dependency-Checks**: Alle Skripte prüfen benötigte Tools vor Ausführung.
+- **Verschlüsselung**: Alle Konfigurationsdateien werden mit GPG (AES256) verschlüsselt
+- **Passwort-Verwaltung**: Das GPG-Passwort wird sicher in `/root/.mailcow-gpg-pass` abgelegt (nur für root lesbar)
+- **FTP-TLS**: Optional mit Zertifikat-Pinning für sichere FTP-Verbindungen
+- **SFTP**: Nutzt SSH-Authentifizierung über `curl`
+- **Dependency-Checks**: Alle Skripte prüfen benötigte Tools vor Ausführung
+- **Status-Flags**: Upload-Scripts prüfen Backup-Abschluss vor dem Upload
 
-## Lizenz
+### 🔄 Backup-Workflow
+
+1. **Backup-Script** (`mailcow-backup.sh`) läuft:
+   - Erstellt `.tar.gz` Archiv mit Zeitstempel
+   - Setzt Completion-Flag: `/tmp/mailcow-backup.status`
+   - Löscht alte lokale Backups basierend auf Retention
+
+2. **Upload-Scripts** prüfen auf Abschluss:
+   - Verifizieren dass `/tmp/mailcow-backup.status` existiert
+   - Laden neuestes Backup hoch
+   - Löschen alte Remote-Backups basierend auf Retention
+
+### 📜 Lizenz
+
 Dieses Projekt steht unter der **CyberSpaceConsulting Public License v1.0**.  
 Die vollständigen Lizenzbedingungen findest du in der [LICENSE](LICENSE)-Datei.
 
-### Wichtige Punkte der Lizenz:
-1. **Keine Weiterveräußerung oder öffentliche Verbreitung**:  
-   Die Software darf nicht verkauft, unterlizenziert oder öffentlich weiterverbreitet werden, ohne vorherige schriftliche Genehmigung von CyberSpaceConsulting.
-   
-2. **Zentrale Verwaltung**:  
-   Alle offiziellen Versionen und Updates werden ausschließlich über das ursprüngliche Repository verwaltet.
-
-3. **Attribution erforderlich**:  
-   Jede Nutzung oder Bereitstellung der Software muss die Herkunft des Projekts klar angeben:  
-   "CyberSpaceConsulting – Original source available at the official repository."
-
-4. **Kommerzielle Nutzung erlaubt (mit Einschränkungen)**:  
-   Die Software darf in kommerziellen Kontexten verwendet werden, jedoch nicht als eigenständiges Produkt oder Dienstleistung weiterverkauft werden.
-
-5. **Keine Garantie**:  
-   Die Software wird "wie besehen" bereitgestellt, ohne jegliche Garantien oder Gewährleistungen.
+#### Wichtige Punkte der Lizenz:
+1. **Keine Weiterveräußerung oder öffentliche Verbreitung**: Die Software darf nicht verkauft, unterlizenziert oder öffentlich weiterverbreitet werden ohne vorherige schriftliche Genehmigung
+2. **Zentrale Verwaltung**: Alle offiziellen Versionen und Updates werden ausschließlich über das ursprüngliche Repository verwaltet
+3. **Attribution erforderlich**: "CyberSpaceConsulting – Original source available at the official repository"
+4. **Kommerzielle Nutzung erlaubt (mit Einschränkungen)**: Die Software darf in kommerziellen Kontexten verwendet werden, jedoch nicht als eigenständiges Produkt weiterverkauft werden
+5. **Keine Garantie**: Die Software wird "wie besehen" bereitgestellt, ohne jegliche Garantien
 
 6. **Verbotene Nutzung in KI-Training**:  
    Die Software darf nicht für das Training oder Fine-Tuning von KI-Modellen verwendet werden, ohne ausdrückliche Genehmigung.
