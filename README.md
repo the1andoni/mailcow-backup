@@ -54,6 +54,29 @@ mailcow-backup/
 
 **Note**: The setup script automatically checks for missing dependencies and offers installation.
 
+### 🌿 Branch Information
+
+**You are on the `V2-LEGACY` branch - the legacy version 2.x support track.**
+
+This branch is maintained for users who need to stay on version 2.x. For new installations, we recommend using version 3.x.
+
+| Branch | Purpose | Recommended For |
+|--------|---------|----------------|
+| `V2-LEGACY` | **Legacy v2.x (this branch)** | ⚠️ Existing v2 installations only |
+| `V3` | Stable v3.x release | ✅ **New installations** |
+| `main` | Active development | ⚠️ Development/testing only |
+
+**Clone instructions:**
+```bash
+# Legacy v2 version (this branch)
+git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
+
+# Recommended: Stable v3 version
+git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
+```
+
+**Migration to V3:** If you want to upgrade from V2 to V3, please check the [V3 release notes](https://github.com/the1andoni/mailcow-backup/releases/tag/v3.0.0) for breaking changes and migration instructions.
+
 ### 🚀 Installation
 
    Sie können das Repository mithilfe von Git Clone einfach runterladen.
@@ -321,6 +344,29 @@ mailcow-backup/
   - **NAS**: `mountpoint` (meist vorinstalliert)
 
 **Hinweis**: Das Setup-Skript prüft automatisch fehlende Abhängigkeiten und bietet deren Installation an.
+
+### 🌿 Branch-Information
+
+**Sie befinden sich auf dem `V2-LEGACY`-Branch - dem Legacy-Support-Track für Version 2.x.**
+
+Dieser Branch wird für Benutzer gepflegt, die bei Version 2.x bleiben müssen. Für neue Installationen empfehlen wir Version 3.x.
+
+| Branch | Zweck | Empfohlen für |
+|--------|-------|---------------|
+| `V2-LEGACY` | **Legacy v2.x (dieser Branch)** | ⚠️ Nur bestehende v2-Installationen |
+| `V3` | Stabile v3.x Version | ✅ **Neue Installationen** |
+| `main` | Aktive Entwicklung | ⚠️ Nur Entwicklung/Tests |
+
+**Clone-Anweisungen:**
+```bash
+# Legacy v2 Version (dieser Branch)
+git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
+
+# Empfohlen: Stabile v3 Version
+git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
+```
+
+**Migration zu V3:** Falls Sie von V2 auf V3 upgraden möchten, prüfen Sie bitte die [V3 Release Notes](https://github.com/the1andoni/mailcow-backup/releases/tag/v3.0.0) für Breaking Changes und Migrationsanleitung.
 
 ### 🚀 Installation
 
