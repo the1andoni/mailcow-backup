@@ -1,10 +1,4 @@
-# mailcow Backup Script v3.0.0 - Major Release
-
-Sprache:
-- Deutsch (diese Datei)
-- English: `Docs/releases/RELEASE_POST_V3.0.0.en.md`
-
----
+## Deutsch
 
 Ich freue mich, **mailcow Backup Script v3.0.0** zu veröffentlichen.
 Dieses Major-Release bringt Internationalisierung, neue Upload-Ziele und ein sichereres Update-Setup.
