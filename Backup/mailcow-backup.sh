@@ -7,10 +7,8 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Konfigurationsdatei entschlüsseln und laden
-echo "Bitte geben Sie das GPG-Passwort ein:"
-read -s -p "Passwort: " gpg_password
-echo
-# GPG-Passwort aus sicherer Datei lesen (z.B. /root/.mailcow-gpg-pass)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CONFIG_DIR="$SCRIPT_DIR/../Configs"
 GPG_PASS_FILE="/root/.mailcow-gpg-pass"
 if [ ! -f "$GPG_PASS_FILE" ]; then
   echo "❌ Fehler: GPG-Passwortdatei $GPG_PASS_FILE nicht gefunden!"
@@ -18,7 +16,15 @@ if [ ! -f "$GPG_PASS_FILE" ]; then
 fi
 gpg_password=$(cat "$GPG_PASS_FILE")
 
-source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/mailcow-config.sh.gpg")
+# Beziehe Retention aus einer vorhandenen Upload-Konfiguration (FTP oder WebDAV)
+if [ -f "$CONFIG_DIR/ftp-config.sh.gpg" ]; then
+  source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/ftp-config.sh.gpg")
+elif [ -f "$CONFIG_DIR/webdav-config.sh.gpg" ]; then
+  source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt "$CONFIG_DIR/webdav-config.sh.gpg")
+else
+  echo "❌ Fehler: Keine Konfiguration gefunden (ftp-config.sh.gpg oder webdav-config.sh.gpg)."
+  exit 1
+fi
 
 # Variablen
 BACKUP_DIR="/backup/mailcow"
@@ -35,7 +41,8 @@ echo "[+] Starte mailcow-Backup..."
 
 # mailcow-Backup starten und Pfad direkt übergeben
 cd "$MAILCOW_DIR" || { echo "❌ Fehler: mailcow-Verzeichnis nicht gefunden!"; exit 1; }
-echo "$BACKUP_PATH" | ./helper-scripts/backup_and_restore.sh backup all --delete-days 7
+DELETE_DAYS="${LOCAL_RETENTION:-7}"
+echo "$BACKUP_PATH" | ./helper-scripts/backup_and_restore.sh backup all --delete-days "$DELETE_DAYS"
 
 # Prüfen, ob das Backup erstellt wurde
 if [ ! -d "$BACKUP_PATH" ] || [ -z "$(ls -A "$BACKUP_PATH")" ]; then
@@ -56,10 +63,14 @@ fi
 
 echo "[+] Archiv erfolgreich erstellt: $TAR_FILE"
 
-# Optional: Alte Backups löschen (z. B. älter als 7 Tage)
-echo "[+] Lösche Backups, die älter als 7 Tage sind..."
-find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +7 -exec rm -f {} \;
-echo "[✅] Alte Backups erfolgreich gelöscht."
+# Optional: Alte Backups löschen basierend auf LOCAL_RETENTION
+if [ -n "$LOCAL_RETENTION" ]; then
+  echo "[+] Lösche Backups, die älter als $LOCAL_RETENTION Tage sind..."
+  find "$BACKUP_DIR" -type f -name "*.tar.gz" -mtime +"$LOCAL_RETENTION" -exec rm -f {} \;
+  echo "[✅] Alte Backups erfolgreich gelöscht."
+else
+  echo "[⚠️] Kein Löschintervall definiert. Es werden keine alten Backups gelöscht."
+fi
 
 # Backup erfolgreich abgeschlossen
 echo "Backup abgeschlossen." > /tmp/mailcow-backup.status

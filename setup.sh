@@ -27,12 +27,22 @@ if [ -d .git ]; then
     echo
     if [[ $REPLY =~ ^[Jj]$ ]]; then
       echo "Führe Update durch..."
-      git stash push -m "setup-stash-$(date +%s)" &>/dev/null
+      SETUP_STASH_NAME="setup-stash-$(date +%s)"
+      SETUP_STASH_CREATED=false
+      if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+        if git stash push --include-untracked -m "$SETUP_STASH_NAME" &>/dev/null; then
+          SETUP_STASH_CREATED=true
+        else
+          echo "Fehler: Lokale Änderungen konnten nicht gesichert werden."
+          exit 1
+        fi
+      fi
+
       git pull origin main &>/dev/null
       if [ $? -eq 0 ]; then
         echo "✓ Update erfolgreich durchgeführt."
         # Stash-Änderungen zurückfahren (falls vorhanden)
-        if git stash list | grep -q "setup-stash"; then
+        if [ "$SETUP_STASH_CREATED" = true ]; then
           git stash pop &>/dev/null
         fi
         # Script neu laden
@@ -40,6 +50,9 @@ if [ -d .git ]; then
         exec "$0" "$@"
       else
         echo "Fehler beim Update. Breche ab."
+        if [ "$SETUP_STASH_CREATED" = true ]; then
+          git stash pop &>/dev/null
+        fi
         exit 1
       fi
     fi

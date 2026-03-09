@@ -6,7 +6,8 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-DEPENDENCIES_FILE="dependencies.txt"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEPENDENCIES_FILE="$SCRIPT_DIR/dependencies.txt"
 
 # Prüfen, ob die Abhängigkeiten-Datei existiert
 if [ ! -f "$DEPENDENCIES_FILE" ]; then
@@ -14,11 +15,11 @@ if [ ! -f "$DEPENDENCIES_FILE" ]; then
   exit 1
 fi
 
-echo "📦 Installiere Abhängigkeiten aus 'dependencies.txt'..."
+echo "📦 Installiere Abhängigkeiten aus '$DEPENDENCIES_FILE'..."
 
 # Jede Zeile der Datei lesen und das Paket installieren
 while IFS= read -r package || [ -n "$package" ]; do
-  if [ -n "$package" ]; then
+  if [ -n "$package" ] && [[ ! "$package" =~ ^# ]]; then
     echo "🔄 Installiere $package..."
     apt-get install -y "$package" || { echo "❌ Fehler beim Installieren von $package"; exit 1; }
   fi

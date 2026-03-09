@@ -167,16 +167,6 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
 
 Die Konfigurationsdateien werden während des Setups erstellt und verschlüsselt im Ordner `Configs` gespeichert. Sie enthalten sensible Informationen wie Zugangsdaten und sollten niemals unverschlüsselt gespeichert werden.
 
-## Hinweis zum `.Configs`-Ordner
-
-Der Ordner `.Configs` wird verwendet, um sensible Konfigurationsdateien zu speichern, die für den Betrieb des Skripts erforderlich sind. 
-
-- Eine leere Datei namens `.gitkeep` wurde hinzugefügt, um sicherzustellen, dass der Ordner in Git enthalten ist.
-- Bitte füge deine eigenen Konfigurationsdateien in diesen Ordner ein, nachdem du das Repository geklont hast. (Wird sonst automatisch vom `setup.sh`-Skript erstellt)
-- Achte darauf, dass sensible Daten wie Zugangsdaten sicher gespeichert werden und nicht versehentlich in das Repository hochgeladen werden.
-
-Falls der Ordner `.Configs` fehlt, wird er automatisch vom `setup.sh`-Skript erstellt.
-
 ## Automatisierung
 
 Das Setup-Skript richtet automatisch systemd-Timer ein, um Backups und Uploads regelmäßig auszuführen. Die Timer können mit den folgenden Befehlen verwaltet werden:
@@ -185,9 +175,13 @@ Das Setup-Skript richtet automatisch systemd-Timer ein, um Backups und Uploads r
   ```bash
   systemctl status mailcow-backup.timer
   ```
-- **Export-Timer**:
+- **FTP-Upload-Timer**:
   ```bash
-  systemctl status mailcow-export.timer
+  systemctl status mailcow-ftp-upload.timer
+  ```
+- **WebDAV-Upload-Timer**:
+  ```bash
+  systemctl status mailcow-webdav-upload.timer
   ```
 
 ## Sicherheit

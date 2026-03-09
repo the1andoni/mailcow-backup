@@ -21,12 +21,29 @@ repair_systemd_services() {
     
     for service_file in "${services[@]}"; do
         if [ -f "$service_file" ]; then
-            # Überprüfe ob die Pfade noch aktuell sind
-            if grep -q "mailcow-backup.sh" "$service_file" && ! grep -q "Backup/mailcow-backup.sh" "$service_file"; then
-                echo "⚠️  Repariere $service_file"
-                sudo sed -i "s|mailcow-backup.sh|Backup/mailcow-backup.sh|g" "$service_file"
-                needs_reload=true
-            fi
+            case "$service_file" in
+                "/etc/systemd/system/mailcow-backup.service")
+                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $backup_script$" "$service_file"; then
+                        echo "⚠️  Repariere $service_file"
+                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $backup_script|" "$service_file"
+                        needs_reload=true
+                    fi
+                    ;;
+                "/etc/systemd/system/mailcow-ftp-upload.service")
+                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $ftp_script$" "$service_file"; then
+                        echo "⚠️  Repariere $service_file"
+                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $ftp_script|" "$service_file"
+                        needs_reload=true
+                    fi
+                    ;;
+                "/etc/systemd/system/mailcow-webdav-upload.service")
+                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $webdav_script$" "$service_file"; then
+                        echo "⚠️  Repariere $service_file"
+                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $webdav_script|" "$service_file"
+                        needs_reload=true
+                    fi
+                    ;;
+            esac
         fi
     done
     
@@ -46,18 +63,21 @@ if [ ! -d .git ]; then
     exit 1
 fi
 
-# 2. Konfigurationsdateien definieren (werden nicht überschrieben)
-CONFIG_FILES=(
-    "config/backup.conf"
-    "config/logging.conf"
-    "config/retention.conf"
-    ".env"
-    "config/*.local"
-)
+# 2. Lokale Änderungen sichern (inkl. untracked Dateien)
+STASH_NAME="Auto-update-stash-$(date +%s)"
+STASH_CREATED=false
 
-# 3. Stash erstellen für lokale Änderungen
-echo "Speichere lokale Änderungen..."
-git stash push -m "Auto-update-stash-$(date +%s)" &>/dev/null
+if ! git diff --quiet || ! git diff --cached --quiet || [ -n "$(git ls-files --others --exclude-standard)" ]; then
+    echo "Speichere lokale Änderungen..."
+    if git stash push --include-untracked -m "$STASH_NAME" &>/dev/null; then
+        STASH_CREATED=true
+    else
+        echo "Fehler: Lokale Änderungen konnten nicht gesichert werden."
+        exit 1
+    fi
+else
+    echo "Keine lokalen Änderungen gefunden."
+fi
 
 # 4. Remote-Infos holen
 echo "Prüfe auf Updates..."
@@ -89,23 +109,25 @@ if [ "$LOCAL" != "$REMOTE" ]; then
             read -p "Möchtest du auch die Abhängigkeiten aktualisieren? (j/N) " -n 1 -r
             echo
             if [[ $REPLY =~ ^[Jj]$ ]]; then
-                sudo bash Dependencies/install_dependencies.sh
+                sudo bash "$REPO_DIR/Dependencies/install_dependencies.sh"
             fi
         fi
         
-        echo "Starte Script neu..."
-        exec "$0" "$@"
+        echo "Update-Schritte abgeschlossen."
     else
         echo "Fehler beim Pull. Breche ab."
-        git stash pop &>/dev/null
+        if [ "$STASH_CREATED" = true ]; then
+            echo "Stelle lokale Änderungen wieder her..."
+            git stash pop &>/dev/null
+        fi
         exit 1
     fi
 else
     echo "✓ Dein Backup-Script ist bereits auf dem neuesten Stand."
 fi
 
-# 8. Stash-Änderungen zurückfahren (falls vorhanden)
-if git stash list | grep -q "Auto-update-stash"; then
+# 8. Lokale Änderungen wiederherstellen
+if [ "$STASH_CREATED" = true ]; then
     echo "Wende lokale Änderungen wieder an..."
     git stash pop &>/dev/null
 fi
