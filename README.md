@@ -102,6 +102,7 @@ mailcow-backup/
    - Sets up systemd timers for automated backups
 
 ### 🌿 Branch Strategy
+**You are on the `Main` branch - the Brach with the newest Features.**
 
 This repository uses multiple branches for different stability levels:
 
@@ -363,7 +364,9 @@ mailcow-backup/
    - Richtet systemd-Timer für automatisierte Backups ein
 
 ### 🌿 Branch-Strategie
+**Sie befinden sich auf dem `Main` branch - den Branch mit den neusten Features.** 
 
+This repository uses multiple branches for different stability levels:
 Dieses Repository verwendet mehrere Branches für unterschiedliche Stabilitätsstufen:
 
 | Branch | Zweck | Stabilität | Für Produktiv-Einsatz |
