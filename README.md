@@ -101,6 +101,30 @@ mailcow-backup/
    - Configures selected backup methods (WebDAV/FTP/SFTP/NAS/S3)
    - Sets up systemd timers for automated backups
 
+### 🌿 Branch Strategy
+**You are on the `Main` branch - the Brach with the newest Features.**
+
+This repository uses multiple branches for different stability levels:
+
+| Branch | Purpose | Stability | For Production Use |
+|--------|---------|-----------|-------------------|
+| `main` | Active development, new features | ⚠️ May be unstable | ❌ No |
+| `V3` | Stable release track (v3.x) | ✅ Stable | ✅ **Yes** |
+| `v2-maintenance` | Legacy support (v2.x) | ✅ Stable | ⚠️ Legacy only |
+
+**For production systems, always use the `V3` branch or tagged releases (`v3.0.0`, `v3.1.0`, etc.).**
+
+**Clone stable version:**
+```bash
+git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
+cd mailcow-backup
+```
+
+**Development workflow:**
+- New features → `main` branch
+- Stable releases → pushed to `V3` after testing
+- Critical bugfixes → `V3` or `v2-maintenance` directly
+
 ### 🔐 Automated Backups & GPG Password
 
 For scheduled backups and uploads to work without interaction, the GPG password is automatically saved during setup in a file (`/root/.mailcow-gpg-pass`).
@@ -338,6 +362,31 @@ mailcow-backup/
    - Bietet Installation fehlender Tools an
    - Konfiguriert gewählte Backup-Methoden (WebDAV/FTP/SFTP/NAS/S3)
    - Richtet systemd-Timer für automatisierte Backups ein
+
+### 🌿 Branch-Strategie
+**Sie befinden sich auf dem `Main` branch - den Branch mit den neusten Features.** 
+
+This repository uses multiple branches for different stability levels:
+Dieses Repository verwendet mehrere Branches für unterschiedliche Stabilitätsstufen:
+
+| Branch | Zweck | Stabilität | Für Produktiv-Einsatz |
+|--------|-------|------------|----------------------|
+| `main` | Aktive Entwicklung, neue Features | ⚠️ Kann instabil sein | ❌ Nein |
+| `V3` | Stabiler Release-Track (v3.x) | ✅ Stabil | ✅ **Ja** |
+| `v2-maintenance` | Legacy-Support (v2.x) | ✅ Stabil | ⚠️ Nur Legacy |
+
+**Für Produktivsysteme sollte immer der `V3`-Branch oder getaggte Releases (`v3.0.0`, `v3.1.0`, etc.) verwendet werden.**
+
+**Stabile Version klonen:**
+```bash
+git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
+cd mailcow-backup
+```
+
+**Entwicklungs-Workflow:**
+- Neue Features → `main` Branch
+- Stabile Releases → nach Tests auf `V3` gepusht
+- Kritische Bugfixes → direkt in `V3` oder `v2-maintenance`
 
 ### 🔐 Automatisierte Backups & GPG-Passwort
 
