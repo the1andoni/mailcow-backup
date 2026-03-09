@@ -13,6 +13,8 @@ A Bash script for backing up mailcow data with support for WebDAV, FTP/SFTP, NAS
 
 ```
 mailcow-backup/
+├── LICENSE
+├── README.md
 ├── setup.sh
 ├── update.sh
 ├── Backup/
@@ -28,6 +30,8 @@ mailcow-backup/
     ├── S3-Upload.sh
     └── WebDAV-Upload.sh
 ```
+
+V3 stays intentionally lean: production scripts and setup logic are kept in-branch, while long-form documentation is maintained in the GitHub Wiki and release pages.
 
 ### ✨ Features
 
@@ -102,7 +106,7 @@ mailcow-backup/
    - Sets up systemd timers for automated backups
 
 ### 🌿 Branch Strategy
-**You are on the `Main` branch - the Brach with the newest Features.**
+**This README applies to the `V3` stable branch.**
 
 This repository uses multiple branches for different stability levels:
 
@@ -134,6 +138,10 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 - New features → `main` branch
 - Stable releases → pushed to `V3` after testing
 - Critical bugfixes → `V3` or `V2-LEGACY` directly
+
+**Documentation and releases:**
+- GitHub Wiki (main documentation): <https://github.com/the1andoni/mailcow-backup/wiki>
+- GitHub Releases (versioned release notes/packages): <https://github.com/the1andoni/mailcow-backup/releases>
 
 ### 🔐 Automated Backups & GPG Password
 
@@ -302,6 +310,8 @@ Ein Bash-Skript zur Sicherung von mailcow-Daten mit Unterstützung für WebDAV-,
 
 ```
 mailcow-backup/
+├── LICENSE
+├── README.md
 ├── setup.sh
 ├── update.sh
 ├── Backup/
@@ -317,6 +327,8 @@ mailcow-backup/
     ├── S3-Upload.sh
     └── WebDAV-Upload.sh
 ```
+
+V3 bleibt bewusst schlank: produktive Skripte und Setup-Logik liegen im Branch, ausfuehrliche Dokumentation zentral im GitHub-Wiki und in den Releases.
 
 ### ✨ Features
 
@@ -391,7 +403,7 @@ mailcow-backup/
    - Richtet systemd-Timer für automatisierte Backups ein
 
 ### 🌿 Branch-Strategie
-**Sie befinden sich auf dem `Main` branch - den Branch mit den neusten Features.** 
+**Diese README gilt fuer den stabilen `V3`-Branch.**
 
 This repository uses multiple branches for different stability levels:
 Dieses Repository verwendet mehrere Branches für unterschiedliche Stabilitätsstufen:
@@ -424,6 +436,10 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 - Neue Features → `main` Branch
 - Stabile Releases → nach Tests auf `V3` gepusht
 - Kritische Bugfixes → direkt in `V3` oder `V2-LEGACY`
+
+**Dokumentation und Releases:**
+- GitHub Wiki (Hauptdokumentation): <https://github.com/the1andoni/mailcow-backup/wiki>
+- GitHub Releases (versionierte Release-Notes/Pakete): <https://github.com/the1andoni/mailcow-backup/releases>
 
 ### 🔐 Automatisierte Backups & GPG-Passwort
 
