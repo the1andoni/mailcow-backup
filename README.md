@@ -1,4 +1,4 @@
-# mailcow Backup Script V2
+# mailcow Backup Script V3
 
 [🇬🇧 English](#english) | [🇩🇪 Deutsch](#deutsch)
 
@@ -60,7 +60,7 @@ mailcow-backup/
 1. **Download Repository**:
 
    ```bash
-   git clone https://github.com/the1andoni/mailcow-backup.git 
+   git clone -b V3 https://github.com/the1andoni/mailcow-backup.git 
    cd mailcow-backup
    ```
    
@@ -324,7 +324,7 @@ mailcow-backup/
 1. **Repository herunterladen**:
 
    ```bash
-   git clone https://github.com/the1andoni/mailcow-backup.git 
+   git clone -b V3 https://github.com/the1andoni/mailcow-backup.git
    cd mailcow-backup
    ```
    
