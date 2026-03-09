@@ -1,4 +1,4 @@
-# mailcow Backup Script
+# mailcow Backup Script V3
 
 [🇬🇧 English](#english) | [🇩🇪 Deutsch](#deutsch)
 
