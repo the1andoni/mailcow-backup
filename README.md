@@ -6,16 +6,18 @@ Ein Bash-Skript zur Sicherung von mailcow-Daten mit Unterstützung für WebDAV- 
 
 ```
 mailcow-BackupV2/
-├── mailcow-backup.sh
 ├── setup.sh
+├── update.sh
+├── Backup/
+│   └── mailcow-backup.sh
 ├── Dependencies/
-│   ├── Dependencies/dependencies.txt
-│   └── Dependencies/install_dependencies.sh
+│   ├── dependencies.txt
+│   └── install_dependencies.sh
 ├── Configs/
 │   └── (verschlüsselte Konfigurationsdateien)
 └── Upload/  
-     ├── Upload/FTP-Upload.sh  
-     └── Upload/WebDAV-Upload.sh
+     ├── FTP-Upload.sh  
+     └── WebDAV-Upload.sh
 ```
 
 ## Features
@@ -43,13 +45,10 @@ mailcow-BackupV2/
 
    ```bash
    git clone https://github.com/the1andoni/mailcow-backupV2.git 
+   cd mailcow-backupV2
    ```
    
-   Anschließend wechseln Sie in das neue Verzeichnis und machen die Scripte mithilfe folgendes Befehles ausführbar.
-
-   ```bash
-   chmod +x mailcow-backupV2/**/*.sh
-   ```
+   Die Scripte werden automatisch beim Setup ausführbar gemacht.
 
    Alternativ steht ein Debian Packet zum Download zur Verfügung.
 
@@ -79,7 +78,7 @@ mailcow-BackupV2/
    sudo ./setup.sh
    ```
 
-   Folgen Sie den Anweisungen im Skript, um die Backup-Methoden (WebDAV/FTP), Aufbewahrungszeiten und Zeitpläne zu konfigurieren.
+   Das Setup-Skript prüft zunächst automatisch auf verfügbare Updates und fragt Sie, ob Sie aktualisieren möchten. Folgen Sie anschließend den Anweisungen im Skript, um die Backup-Methoden (WebDAV/FTP), Aufbewahrungszeiten und Zeitpläne zu konfigurieren.
 
 ## Automatisierte Backups & GPG-Passwort
 
@@ -96,10 +95,18 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
 
 ## Nutzung
 
+- **Updates installieren**:
+
+  ```bash
+  sudo ./update.sh
+  ```
+
+  Das Update-Skript aktualisiert das Repository, macht alle Scripts ausführbar und repariert automatisch alle systemd-Services, falls nötig.
+
 - **Backup manuell starten**:
 
   ```bash
-  sudo ./mailcow-backup.sh
+  sudo ./Backup/mailcow-backup.sh
   ```
 
 - **WebDAV-Upload manuell starten**:
@@ -128,18 +135,32 @@ Das Backup-Skript liest dieses Passwort automatisch ein und entschlüsselt damit
     systemctl disable mailcow-backup.timer
     ```
 
-- **Systemd-Timer für Exporte verwalten**:
+- **Systemd-Timer für WebDAV-Upload verwalten**:
   - **Status überprüfen**:
     ```bash
-    systemctl status mailcow-export.timer
+    systemctl status mailcow-webdav-upload.timer
     ```
   - **Manuell starten**:
     ```bash
-    systemctl start mailcow-export.service
+    systemctl start mailcow-webdav-upload.service
     ```
   - **Deaktivieren**:
     ```bash
-    systemctl disable mailcow-export.timer
+    systemctl disable mailcow-webdav-upload.timer
+    ```
+
+- **Systemd-Timer für FTP-Upload verwalten**:
+  - **Status überprüfen**:
+    ```bash
+    systemctl status mailcow-ftp-upload.timer
+    ```
+  - **Manuell starten**:
+    ```bash
+    systemctl start mailcow-ftp-upload.service
+    ```
+  - **Deaktivieren**:
+    ```bash
+    systemctl disable mailcow-ftp-upload.timer
     ```
 
 ## Konfiguration

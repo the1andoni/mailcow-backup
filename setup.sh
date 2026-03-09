@@ -6,9 +6,51 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
+# Pfad zum Repository-Verzeichnis
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$REPO_DIR"
+
+# Prüfen auf verfügbare Updates
+echo "Prüfe auf verfügbare Updates..."
+if [ -d .git ]; then
+  git fetch origin main &>/dev/null
+  
+  LOCAL=$(git rev-parse HEAD)
+  REMOTE=$(git rev-parse origin/main)
+  
+  if [ "$LOCAL" != "$REMOTE" ]; then
+    echo ""
+    echo "⚠️  Ein Update ist verfügbar!"
+    echo "Es wird empfohlen, zuerst das Repository zu aktualisieren."
+    echo ""
+    read -p "Möchten Sie jetzt aktualisieren? (j/N) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Jj]$ ]]; then
+      echo "Führe Update durch..."
+      git stash push -m "setup-stash-$(date +%s)" &>/dev/null
+      git pull origin main &>/dev/null
+      if [ $? -eq 0 ]; then
+        echo "✓ Update erfolgreich durchgeführt."
+        # Stash-Änderungen zurückfahren (falls vorhanden)
+        if git stash list | grep -q "setup-stash"; then
+          git stash pop &>/dev/null
+        fi
+        # Script neu laden
+        echo "Starte Setup neu..."
+        exec "$0" "$@"
+      else
+        echo "Fehler beim Update. Breche ab."
+        exit 1
+      fi
+    fi
+  fi
+else
+  echo "Keine Git-Repository gefunden. Überspringe Update-Prüfung."
+fi
+
 CONFIG_DIR="$(dirname "$0")/Configs"
 SCRIPT_DIR="$(dirname "$0")"
-BACKUP_SCRIPT="$SCRIPT_DIR/mailcow-backup.sh"
+BACKUP_SCRIPT="$SCRIPT_DIR/Backup/mailcow-backup.sh"
 FTP_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/FTP-Upload.sh"
 WEBDAV_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/WebDAV-Upload.sh"
 mkdir -p "$CONFIG_DIR"
