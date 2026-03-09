@@ -95,18 +95,24 @@ Mailcow-BackupV2/
   sudo ./Upload/FTP-Upload.sh
   ```
 
-## Hinweis zu Updates (Legacy)
+## Hinweis zu Updates und Versionswechsel
 
-Die `V2-Legacy`-Version enthielt urspruenglich kein `update.sh`.
+Die Legacy-Version enthaelt jetzt ein `update.sh`, das Updates und Versionswechsel zwischen den Release-Branches unterstuetzt.
 
-Wenn Sie auf dieser Legacy-Version bleiben, koennen Sie das Script bei Bedarf manuell aus der aktuellen Version herunterladen und danach ausfuehrbar machen:
+Beispiele:
 
 ```bash
-wget -O update.sh https://raw.githubusercontent.com/the1andoni/mailcow-backupV2/main/update.sh
-chmod +x update.sh
+./update.sh --v2
+./update.sh --v3
+./update.sh --main
 ```
 
-Alternativ koennen Sie Updates weiterhin klassisch ueber `git pull` einspielen, wenn das Repository per Git geklont wurde.
+Regeln fuer Versionswechsel:
+
+- Upgrades sind erlaubt: `V2-LEGACY -> V3 -> main`
+- Downgrades sind nicht moeglich und werden aktiv blockiert
+
+Wenn kein Ziel-Flag angegeben wird, aktualisiert `update.sh` den aktuell ausgecheckten Branch.
 
 ## Konfiguration
 
