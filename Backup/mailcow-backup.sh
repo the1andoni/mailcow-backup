@@ -73,7 +73,7 @@ echo "[+] Archive path: $BACKUP_FILE"
 mkdir -p "$BACKUP_PATH"
 if ! (
   cd "$MAILCOW_DIR" &&
-  echo "$BACKUP_PATH" | "$MAILCOW_HELPER_SCRIPT" backup all --delete-days 7
+  echo "$BACKUP_PATH" | ./helper-scripts/backup_and_restore.sh backup all --delete-days 7
 ); then
   echo "❌ Error: mailcow backup helper failed!"
   rm -rf "$BACKUP_PATH"
