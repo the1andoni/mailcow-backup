@@ -151,7 +151,6 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 
 **Project wiki:**
 - GitHub Wiki: <https://github.com/the1andoni/mailcow-backup/wiki>
-- Wiki sources in repository: `Docs/Wiki/`
 
 ### 🔐 Automated Backups & GPG Password
 
@@ -459,7 +458,6 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 
 **Projekt-Wiki:**
 - GitHub Wiki: <https://github.com/the1andoni/mailcow-backup/wiki>
-- Wiki-Quellen im Repository: `Docs/Wiki/`
 
 ### 🔐 Automatisierte Backups & GPG-Passwort
 
