@@ -34,6 +34,7 @@ source <(echo "$gpg_password" | gpg --quiet --batch --passphrase-fd 0 --decrypt 
 # Variables
 BACKUP_DIR="/backup/mailcow"
 LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.tar.gz | head -n 1)
+BACKUP_BASENAME=$(basename "$LATEST_BACKUP")
 
 # Check if backup exists
 if [ ! -f "$LATEST_BACKUP" ]; then
@@ -41,15 +42,20 @@ if [ ! -f "$LATEST_BACKUP" ]; then
   exit 1
 fi
 
+# Ensure WebDAV URL ends with /
+if [[ "$WEBDAV_URL" != */ ]]; then
+  WEBDAV_URL="$WEBDAV_URL/"
+fi
+
 # Upload backup to WebDAV
 echo "[+] Uploading backup to WebDAV server..."
-UPLOAD_RESPONSE=$(curl -u "$WEBDAV_USER:$WEBDAV_PASSWORD" -T "$LATEST_BACKUP" "$WEBDAV_URL" --silent --write-out "%{http_code}")
+HTTP_CODE=$(curl -u "$WEBDAV_USER:$WEBDAV_PASSWORD" -T "$LATEST_BACKUP" "${WEBDAV_URL}${BACKUP_BASENAME}" -w "%{http_code}" -o /dev/null --silent)
 
-# Check if upload was successful
-if [ "$UPLOAD_RESPONSE" -eq 201 ] || [ "$UPLOAD_RESPONSE" -eq 204 ]; then
+# Check if upload was successful (201 Created or 204 No Content)
+if [ "$HTTP_CODE" -eq 201 ] || [ "$HTTP_CODE" -eq 204 ]; then
   echo "[✅] Backup successfully uploaded to WebDAV server!"
 else
-  echo "❌ Error: Upload failed (HTTP code: $UPLOAD_RESPONSE)"
+  echo "❌ Error: Upload failed (HTTP code: $HTTP_CODE)"
   exit 1
 fi
 
