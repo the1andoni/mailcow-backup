@@ -14,10 +14,10 @@ cd "$REPO_DIR"
 echo "Checking for available updates..."
 if [ -d .git ]; then
   git fetch origin main &>/dev/null
-  
+
   LOCAL=$(git rev-parse HEAD)
   REMOTE=$(git rev-parse origin/main)
-  
+
   if [ "$LOCAL" != "$REMOTE" ]; then
     echo ""
     echo "⚠️  An update is available!"
@@ -148,139 +148,155 @@ echo "How many days should backups be retained on the remote server (WebDAV/FTP)
 read -p "Remote (in days): " remote_retention
 
 # Configure backup methods
-echo "Which backup methods do you want to set up?"
+echo ""
+echo "═══════════════════════════════════════════════════"
+echo "Choose upload methods to configure:"
+echo "═══════════════════════════════════════════════════"
 echo "1) WebDAV"
-echo "2) FTP"
-echo "3) Both"
-read -p "Please select an option (1, 2 or 3): " export_option
+echo "2) FTP / SFTP"
+echo "3) NAS Upload"
+echo "4) S3 Upload"
+echo ""
+echo "Select multiple options (e.g. 1,2,4 or enter for all):"
+read -p "Your choice: " upload_methods
 
-if [ "$export_option" == "1" ] || [ "$export_option" == "3" ]; then
-    ensure_dependencies "WebDAV" gpg curl || exit 1
-    echo "You selected WebDAV."
-    echo "Please enter the WebDAV URL (e.g. https://webdav-server/path/):"
-    read -p "WebDAV URL: " webdav_url
-    echo "Please enter your WebDAV username:"
-    read -p "Username: " webdav_user
-    echo "Please enter your WebDAV password:"
-    read -s -p "Password: " webdav_password
-    echo
-
-    # Delete previous unencrypted file if exists
-    rm -f "$CONFIG_DIR/webdav-config.sh"
-
-    # Save WebDAV configuration
-    echo "WEBDAV_URL=\"$webdav_url\"" > "$CONFIG_DIR/webdav-config.sh"
-    echo "WEBDAV_USER=\"$webdav_user\"" >> "$CONFIG_DIR/webdav-config.sh"
-    echo "WEBDAV_PASSWORD=\"$webdav_password\"" >> "$CONFIG_DIR/webdav-config.sh"
-    echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/webdav-config.sh"
-    echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/webdav-config.sh"
-
-    # Encrypt configuration file
-    echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/webdav-config.sh.gpg" "$CONFIG_DIR/webdav-config.sh"
-    rm -f "$CONFIG_DIR/webdav-config.sh"
+# Default to all if empty
+if [ -z "$upload_methods" ]; then
+  upload_methods="1,2,3,4"
 fi
 
-if [ "$export_option" == "2" ] || [ "$export_option" == "3" ]; then
-    ensure_dependencies "FTP/SFTP" gpg curl || exit 1
-    echo "You selected FTP/SFTP."
-    echo "Which protocol do you want to use?"
-    echo "1) FTP"
-    echo "2) SFTP"
-    read -p "Please select an option (1 or 2): " ftp_protocol_option
+# Process WebDAV
+if [[ "$upload_methods" =~ 1 ]]; then
+  ensure_dependencies "WebDAV" gpg curl || exit 1
+  echo ""
+  echo "━ WebDAV Configuration"
+  echo "Please enter the WebDAV URL (e.g. https://webdav-server/path/):"
+  read -p "WebDAV URL: " webdav_url
+  echo "Please enter your WebDAV username:"
+  read -p "Username: " webdav_user
+  echo "Please enter your WebDAV password:"
+  read -s -p "Password: " webdav_password
+  echo
 
-    case "$ftp_protocol_option" in
-      2)
-        ftp_protocol="sftp"
-        ;;
-      *)
-        ftp_protocol="ftp"
-        ;;
-    esac
+  rm -f "$CONFIG_DIR/webdav-config.sh"
+  echo "WEBDAV_URL=\"$webdav_url\"" > "$CONFIG_DIR/webdav-config.sh"
+  echo "WEBDAV_USER=\"$webdav_user\"" >> "$CONFIG_DIR/webdav-config.sh"
+  echo "WEBDAV_PASSWORD=\"$webdav_password\"" >> "$CONFIG_DIR/webdav-config.sh"
+  echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/webdav-config.sh"
+  echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/webdav-config.sh"
 
-    echo "Please enter the server address (without protocol, e.g. backup.example.com):"
-    read -p "Server: " ftp_server
-    echo "Please enter the upload target path (e.g. /mailcow-backups):"
-    read -p "Upload path: " ftp_upload_dir
-    echo "Please enter your username:"
-    read -p "Username: " ftp_user
-    echo "Please enter your password:"
-    read -s -p "Password: " ftp_password
-
-    ftp_certificate_fingerprint=""
-    if [ "$ftp_protocol" = "ftp" ]; then
-      echo "Optional: Please enter the FTP certificate fingerprint (or leave empty):"
-      read -p "Certificate fingerprint: " ftp_certificate_fingerprint
-    fi
-    echo
-
-    # Delete previous unencrypted file if exists
-    rm -f "$CONFIG_DIR/ftp-config.sh"
-
-    # Save FTP configuration
-    echo "FTP_PROTOCOL=\"$ftp_protocol\"" > "$CONFIG_DIR/ftp-config.sh"
-    echo "FTP_SERVER=\"$ftp_server\"" >> "$CONFIG_DIR/ftp-config.sh"
-    echo "FTP_UPLOAD_DIR=\"$ftp_upload_dir\"" >> "$CONFIG_DIR/ftp-config.sh"
-    echo "FTP_USER=\"$ftp_user\"" >> "$CONFIG_DIR/ftp-config.sh"
-    echo "FTP_PASSWORD=\"$ftp_password\"" >> "$CONFIG_DIR/ftp-config.sh"
-    echo "FTP_CERTIFICATE_FINGERPRINT=\"$ftp_certificate_fingerprint\"" >> "$CONFIG_DIR/ftp-config.sh"
-    echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/ftp-config.sh"
-    echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/ftp-config.sh"
-
-    # Encrypt configuration file
-    echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/ftp-config.sh.gpg" "$CONFIG_DIR/ftp-config.sh"
-    rm -f "$CONFIG_DIR/ftp-config.sh"
+  echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/webdav-config.sh.gpg" "$CONFIG_DIR/webdav-config.sh"
+  rm -f "$CONFIG_DIR/webdav-config.sh"
+  echo "✓ WebDAV configuration saved."
 fi
 
-  echo "Do you want to set up NAS upload? (y/n)"
-  read -p "Input: " nas_config_choice
-  if [ "$nas_config_choice" == "y" ]; then
-    ensure_dependencies "NAS" gpg mountpoint || exit 1
-    echo "Please enter the local NAS mount path (e.g. /mnt/backup-nas):"
-    read -p "NAS mount path: " nas_mount_path
-    echo "Please enter the target folder on the NAS (e.g. /mailcow):"
-    read -p "NAS target folder: " nas_upload_dir
+# Process FTP/SFTP
+if [[ "$upload_methods" =~ 2 ]]; then
+  ensure_dependencies "FTP/SFTP" gpg curl || exit 1
+  echo ""
+  echo "━ FTP/SFTP Configuration"
+  echo "Which protocol do you want to use?"
+  echo "1) FTP"
+  echo "2) SFTP"
+  read -p "Please select (1 or 2): " ftp_protocol_option
 
-    rm -f "$CONFIG_DIR/nas-config.sh"
-    echo "NAS_MOUNT_PATH=\"$nas_mount_path\"" > "$CONFIG_DIR/nas-config.sh"
-    echo "NAS_UPLOAD_DIR=\"$nas_upload_dir\"" >> "$CONFIG_DIR/nas-config.sh"
-    echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/nas-config.sh"
-    echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/nas-config.sh"
+  case "$ftp_protocol_option" in
+    2)
+      ftp_protocol="sftp"
+      ;;
+    *)
+      ftp_protocol="ftp"
+      ;;
+  esac
 
-    echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/nas-config.sh.gpg" "$CONFIG_DIR/nas-config.sh"
-    rm -f "$CONFIG_DIR/nas-config.sh"
+  echo "Please enter the server address (without protocol, e.g. backup.example.com):"
+  read -p "Server: " ftp_server
+  echo "Please enter the upload target path (e.g. /mailcow-backups):"
+  read -p "Upload path: " ftp_upload_dir
+  echo "Please enter your username:"
+  read -p "Username: " ftp_user
+  echo "Please enter your password:"
+  read -s -p "Password: " ftp_password
+  echo
+
+  ftp_certificate_fingerprint=""
+  if [ "$ftp_protocol" = "ftp" ]; then
+    echo "Optional: Please enter the FTP certificate fingerprint (or leave empty):"
+    read -p "Certificate fingerprint: " ftp_certificate_fingerprint
   fi
+  echo
 
-  echo "Do you want to set up S3 upload? (y/n)"
-  read -p "Input: " s3_config_choice
-  if [ "$s3_config_choice" == "y" ]; then
-    ensure_dependencies "S3" gpg aws || exit 1
-    echo "Please enter the S3 bucket name (e.g. my-backup-bucket):"
-    read -p "S3 bucket: " s3_bucket
-    echo "Optional: S3 prefix in bucket (e.g. mailcow, leave empty for root):"
-    read -p "S3 prefix: " s3_prefix
-    echo "Optional: S3 endpoint for S3-compatible services (e.g. https://s3.eu-central-1.amazonaws.com):"
-    read -p "S3 endpoint: " s3_endpoint
-    echo "Please enter the AWS Access Key ID:"
-    read -p "Access Key ID: " aws_access_key_id
-    echo "Please enter the AWS Secret Access Key:"
-    read -s -p "Secret Access Key: " aws_secret_access_key
-    echo
-    echo "Please enter the AWS region (e.g. eu-central-1):"
-    read -p "Region: " aws_region
+  rm -f "$CONFIG_DIR/ftp-config.sh"
+  echo "FTP_PROTOCOL=\"$ftp_protocol\"" > "$CONFIG_DIR/ftp-config.sh"
+  echo "FTP_SERVER=\"$ftp_server\"" >> "$CONFIG_DIR/ftp-config.sh"
+  echo "FTP_UPLOAD_DIR=\"$ftp_upload_dir\"" >> "$CONFIG_DIR/ftp-config.sh"
+  echo "FTP_USER=\"$ftp_user\"" >> "$CONFIG_DIR/ftp-config.sh"
+  echo "FTP_PASSWORD=\"$ftp_password\"" >> "$CONFIG_DIR/ftp-config.sh"
+  echo "FTP_CERTIFICATE_FINGERPRINT=\"$ftp_certificate_fingerprint\"" >> "$CONFIG_DIR/ftp-config.sh"
+  echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/ftp-config.sh"
+  echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/ftp-config.sh"
 
-    rm -f "$CONFIG_DIR/s3-config.sh"
-    echo "S3_BUCKET=\"$s3_bucket\"" > "$CONFIG_DIR/s3-config.sh"
-    echo "S3_PREFIX=\"$s3_prefix\"" >> "$CONFIG_DIR/s3-config.sh"
-    echo "S3_ENDPOINT=\"$s3_endpoint\"" >> "$CONFIG_DIR/s3-config.sh"
-    echo "AWS_ACCESS_KEY_ID=\"$aws_access_key_id\"" >> "$CONFIG_DIR/s3-config.sh"
-    echo "AWS_SECRET_ACCESS_KEY=\"$aws_secret_access_key\"" >> "$CONFIG_DIR/s3-config.sh"
-    echo "AWS_DEFAULT_REGION=\"$aws_region\"" >> "$CONFIG_DIR/s3-config.sh"
-    echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/s3-config.sh"
-    echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/s3-config.sh"
+  echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/ftp-config.sh.gpg" "$CONFIG_DIR/ftp-config.sh"
+  rm -f "$CONFIG_DIR/ftp-config.sh"
+  echo "✓ FTP/SFTP configuration saved."
+fi
 
-    echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/s3-config.sh.gpg" "$CONFIG_DIR/s3-config.sh"
-    rm -f "$CONFIG_DIR/s3-config.sh"
-  fi
+# Process NAS
+if [[ "$upload_methods" =~ 3 ]]; then
+  ensure_dependencies "NAS" gpg mountpoint || exit 1
+  echo ""
+  echo "━ NAS Configuration"
+  echo "Please enter the local NAS mount path (e.g. /mnt/backup-nas):"
+  read -p "NAS mount path: " nas_mount_path
+  echo "Please enter the target folder on the NAS (e.g. /mailcow):"
+  read -p "NAS target folder: " nas_upload_dir
+  echo
+
+  rm -f "$CONFIG_DIR/nas-config.sh"
+  echo "NAS_MOUNT_PATH=\"$nas_mount_path\"" > "$CONFIG_DIR/nas-config.sh"
+  echo "NAS_UPLOAD_DIR=\"$nas_upload_dir\"" >> "$CONFIG_DIR/nas-config.sh"
+  echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/nas-config.sh"
+  echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/nas-config.sh"
+
+  echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/nas-config.sh.gpg" "$CONFIG_DIR/nas-config.sh"
+  rm -f "$CONFIG_DIR/nas-config.sh"
+  echo "✓ NAS configuration saved."
+fi
+
+# Process S3
+if [[ "$upload_methods" =~ 4 ]]; then
+  ensure_dependencies "S3" gpg aws || exit 1
+  echo ""
+  echo "━ S3 Configuration"
+  echo "Please enter the S3 bucket name (e.g. my-backup-bucket):"
+  read -p "S3 bucket: " s3_bucket
+  echo "Optional: S3 prefix in bucket (e.g. mailcow, leave empty for root):"
+  read -p "S3 prefix: " s3_prefix
+  echo "Optional: S3 endpoint for S3-compatible services (e.g. https://s3.eu-central-1.amazonaws.com):"
+  read -p "S3 endpoint: " s3_endpoint
+  echo "Please enter the AWS Access Key ID:"
+  read -p "Access Key ID: " aws_access_key_id
+  echo "Please enter the AWS Secret Access Key:"
+  read -s -p "Secret Access Key: " aws_secret_access_key
+  echo
+  echo "Please enter the AWS region (e.g. eu-central-1):"
+  read -p "Region: " aws_region
+  echo
+
+  rm -f "$CONFIG_DIR/s3-config.sh"
+  echo "S3_BUCKET=\"$s3_bucket\"" > "$CONFIG_DIR/s3-config.sh"
+  echo "S3_PREFIX=\"$s3_prefix\"" >> "$CONFIG_DIR/s3-config.sh"
+  echo "S3_ENDPOINT=\"$s3_endpoint\"" >> "$CONFIG_DIR/s3-config.sh"
+  echo "AWS_ACCESS_KEY_ID=\"$aws_access_key_id\"" >> "$CONFIG_DIR/s3-config.sh"
+  echo "AWS_SECRET_ACCESS_KEY=\"$aws_secret_access_key\"" >> "$CONFIG_DIR/s3-config.sh"
+  echo "AWS_DEFAULT_REGION=\"$aws_region\"" >> "$CONFIG_DIR/s3-config.sh"
+  echo "LOCAL_RETENTION=\"$local_retention\"" >> "$CONFIG_DIR/s3-config.sh"
+  echo "REMOTE_RETENTION=\"$remote_retention\"" >> "$CONFIG_DIR/s3-config.sh"
+
+  echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output "$CONFIG_DIR/s3-config.sh.gpg" "$CONFIG_DIR/s3-config.sh"
+  rm -f "$CONFIG_DIR/s3-config.sh"
+  echo "✓ S3 configuration saved."
+fi
 
 # Set up systemd timer for backup
 echo "How often should the backup be performed?"
