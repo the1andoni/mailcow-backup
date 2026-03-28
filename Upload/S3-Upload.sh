@@ -60,11 +60,17 @@ if [ -n "$S3_ENDPOINT" ]; then
   AWS_CMD+=(--endpoint-url "$S3_ENDPOINT")
 fi
 
+export AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID
+export AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY
+
 "${AWS_CMD[@]}"
 if [ $? -ne 0 ]; then
   echo "Error: Upload to S3 failed!"
   exit 1
 fi
+
+unset AWS_ACCESS_KEY_ID
+unset AWS_SECRET_ACCESS_KEY
 
 echo "Backup successfully uploaded to S3: $S3_TARGET"
 
