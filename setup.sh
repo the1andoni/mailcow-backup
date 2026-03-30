@@ -132,8 +132,8 @@ else
   echo "No Git repository found. Skipping update check."
 fi
 
-CONFIG_DIR="$(dirname "$0")/Configs"
-SCRIPT_DIR="$(dirname "$0")"
+CONFIG_DIR="$(cd "$(dirname "$0")" && pwd)/Configs"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 BACKUP_SCRIPT="$SCRIPT_DIR/Backup/mailcow-backup.sh"
 FTP_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/FTP-Upload.sh"
 WEBDAV_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/WebDAV-Upload.sh"
@@ -141,7 +141,7 @@ NAS_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/NAS-Upload.sh"
 S3_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/S3-Upload.sh"
 mkdir -p "$CONFIG_DIR"
 
-echo "\nInfo: Du kannst setup.sh mit --status, --status-detailed oder --help aufrufen."
+echo "\Info: Du kannst setup.sh mit --status, --status-detailed oder --help aufrufen."
 
 ensure_dependencies() {
   local feature="$1"
