@@ -90,37 +90,38 @@ repair_systemd_services() {
         if [ -f "$service_file" ]; then
             case "$service_file" in
                 "/etc/systemd/system/mailcow-backup.service")
-                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $backup_script$" "$service_file"; then
-                        echo "⚠️  Repairing $service_file"
-                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $backup_script|" "$service_file"
+                    # Check if absolute path is used
+                    if ! grep -q "ExecStart=/bin/bash $backup_script" "$service_file"; then
+                        echo "⚠️  Repairing $service_file with absolute paths"
+                        sudo sed -i "s|ExecStart=.*|ExecStart=/bin/bash $backup_script|" "$service_file"
                         needs_reload=true
                     fi
                     ;;
                 "/etc/systemd/system/mailcow-ftp-upload.service")
-                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $ftp_script$" "$service_file"; then
-                        echo "⚠️  Repairing $service_file"
-                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $ftp_script|" "$service_file"
+                    if ! grep -q "ExecStart=/bin/bash $ftp_script" "$service_file"; then
+                        echo "⚠️  Repairing $service_file with absolute paths"
+                        sudo sed -i "s|ExecStart=.*|ExecStart=/bin/bash $ftp_script|" "$service_file"
                         needs_reload=true
                     fi
                     ;;
                 "/etc/systemd/system/mailcow-webdav-upload.service")
-                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $webdav_script$" "$service_file"; then
-                        echo "⚠️  Repairing $service_file"
-                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $webdav_script|" "$service_file"
+                    if ! grep -q "ExecStart=/bin/bash $webdav_script" "$service_file"; then
+                        echo "⚠️  Repairing $service_file with absolute paths"
+                        sudo sed -i "s|ExecStart=.*|ExecStart=/bin/bash $webdav_script|" "$service_file"
                         needs_reload=true
                     fi
                     ;;
                 "/etc/systemd/system/mailcow-nas-upload.service")
-                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $nas_script$" "$service_file"; then
-                        echo "⚠️  Repairing $service_file"
-                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $nas_script|" "$service_file"
+                    if ! grep -q "ExecStart=/bin/bash $nas_script" "$service_file"; then
+                        echo "⚠️  Repairing $service_file with absolute paths"
+                        sudo sed -i "s|ExecStart=.*|ExecStart=/bin/bash $nas_script|" "$service_file"
                         needs_reload=true
                     fi
                     ;;
                 "/etc/systemd/system/mailcow-s3-upload.service")
-                    if grep -q "^ExecStart=" "$service_file" && ! grep -q "^ExecStart=/bin/bash $s3_script$" "$service_file"; then
-                        echo "⚠️  Repairing $service_file"
-                        sudo sed -i "s|^ExecStart=.*|ExecStart=/bin/bash $s3_script|" "$service_file"
+                    if ! grep -q "ExecStart=/bin/bash $s3_script" "$service_file"; then
+                        echo "⚠️  Repairing $service_file with absolute paths"
+                        sudo sed -i "s|ExecStart=.*|ExecStart=/bin/bash $s3_script|" "$service_file"
                         needs_reload=true
                     fi
                     ;;
@@ -128,11 +129,15 @@ repair_systemd_services() {
         fi
     done
     
-    # Reload systemd if necessary
+    # Reload systemd if necessary and restart failed timers
     if [ "$needs_reload" = true ]; then
         echo "Reloading systemd..."
         sudo systemctl daemon-reload
-        echo "✓ Systemd files updated"
+        echo "Restarting mailcow timers..."
+        sudo systemctl restart mailcow-backup.timer mailcow-ftp-upload.timer mailcow-webdav-upload.timer mailcow-nas-upload.timer mailcow-s3-upload.timer 2>/dev/null
+        echo "✓ Systemd files updated and services restarted"
+    else
+        echo "✓ All systemd services are properly configured"
     fi
 }
 
