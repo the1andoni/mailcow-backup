@@ -145,12 +145,28 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 - Stable releases → pushed to `V3` after testing
 - Critical bugfixes → `V3` or `V2-LEGACY` directly
 
+### 🛠️ Status- & Help-Flags in setup.sh (neu)
+Das Setup-Skript unterstützt jetzt folgende Optionen:
+
+- `sudo ./setup.sh --status`: prüft mailcow systemd-Timer und Services kurz
+- `sudo ./setup.sh --status-detailed`: zusätzlich Timer-Zeiten (`next/left/last`) und letzte 5 Journal-Zeilen
+- `sudo ./setup.sh --help` (`-h`): zeigt diese Hilfemeldung
+
+Wenn kein Flag angegeben wird, wird das normale Setup ausgeführt, und am Ende eine kurze Statusprüfung (wie `--status`) automatisch durchgeführt.
+
+### 🧾 Push-Report
+- Eingefügt: `--help`/`-h`
+- Eingefügt: `--status`, `--status-detailed`
+- Eingefügt: `check_mailcow_unit_status` für Timer/Service-Validierung
+- Eingefügt: klare Startup-Info zu verwendbaren Flags
+
 **Release tag policy:**
 - German: `Docs/RELEASE_TAG_POLICY.de.md`
 - English: `Docs/RELEASE_TAG_POLICY.en.md`
 
 **Project wiki:**
 - GitHub Wiki: <https://github.com/the1andoni/mailcow-backup/wiki>
+- Wiki sources in repository: `Docs/Wiki/`
 
 ### 🔐 Automated Backups & GPG Password
 
@@ -458,6 +474,7 @@ git clone -b V2-LEGACY https://github.com/the1andoni/mailcow-backup.git
 
 **Projekt-Wiki:**
 - GitHub Wiki: <https://github.com/the1andoni/mailcow-backup/wiki>
+- Wiki-Quellen im Repository: `Docs/Wiki/`
 
 ### 🔐 Automatisierte Backups & GPG-Passwort
 

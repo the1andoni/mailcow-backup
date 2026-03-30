@@ -1,5 +1,22 @@
 #!/bin/bash
 
+show_usage() {
+  echo "Usage: $0 [--status|--status-detailed]"
+  echo "  --status           Prüft mailcow systemd-Timer und Services kurz"
+  echo "  --status-detailed  zusätzlich letzter Lauf / Timerzeitpunkte / zuletzt Logeinträge"
+}
+
+# Action mode from command line
+STATUS_MODE=""
+if [ "$1" = "--status" ] || [ "$1" = "--status-detailed" ]; then
+  STATUS_MODE="$1"
+fi
+
+if [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
+  show_usage
+  exit 0
+fi
+
 # Check if script is run with sudo
 if [ "$EUID" -ne 0 ]; then
   echo "Please run this script with sudo."
@@ -9,6 +26,60 @@ fi
 # Path to repository directory
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$REPO_DIR"
+
+get_configured_uploads() {
+  local active=""
+  [ -f "$CONFIG_DIR/ftp-config.sh.gpg" ] && active="${active}FTP "
+  [ -f "$CONFIG_DIR/webdav-config.sh.gpg" ] && active="${active}WebDAV "
+  [ -f "$CONFIG_DIR/nas-config.sh.gpg" ] && active="${active}NAS "
+  [ -f "$CONFIG_DIR/s3-config.sh.gpg" ] && active="${active}S3 "
+  echo "${active:-none}"
+}
+
+get_timer_times() {
+  local unit="$1"
+  local line
+  line=$(systemctl list-timers --all --no-legend | grep -E "^${unit}\.timer" | head -n 1)
+  if [ -z "$line" ]; then
+    echo "next=n/a left=n/a last=n/a"
+  else
+    echo "$line" | awk '{printf "next=%s left=%s last=%s", $1, $2, $3}'
+  fi
+}
+
+check_mailcow_unit_status() {
+  local mode="$1"
+  local units=("mailcow-backup" "mailcow-ftp-upload" "mailcow-webdav-upload" "mailcow-nas-upload" "mailcow-s3-upload")
+  local unit timer_state timer_enabled service_state scheduler
+
+  echo "\nÜberprüfe mailcow systemd Units..."
+  echo "Konfigurierte Uploads: $(get_configured_uploads)"
+
+  for unit in "${units[@]}"; do
+    if systemctl list-unit-files --all | grep -q "^${unit}\.timer"; then
+      timer_state=$(systemctl is-active "${unit}.timer" 2>/dev/null || echo "inactive")
+      timer_enabled=$(systemctl is-enabled "${unit}.timer" 2>/dev/null || echo "disabled")
+      service_state=$(systemctl is-active "${unit}.service" 2>/dev/null || echo "inactive")
+      echo "[$unit] timer: ${timer_state} (enabled: ${timer_enabled}), service: ${service_state}"
+      if [ "$mode" = "--status-detailed" ]; then
+        scheduler=$(get_timer_times "$unit")
+        echo "        ${scheduler}"
+        echo "        Journal (letzte 5 Zeilen):"
+        journalctl -u "${unit}.service" -n 5 --no-pager 2>/dev/null | sed 's/^/        /'
+      fi
+    elif systemctl list-unit-files --all | grep -q "^${unit}\.service"; then
+      service_state=$(systemctl is-active "${unit}.service" 2>/dev/null || echo "inactive")
+      echo "[$unit] timer: not configured, service: ${service_state}"
+    else
+      echo "[$unit] nicht konfiguriert (keine Timer/Service-Unit gefunden)."
+    fi
+  done
+}
+
+if [ -n "$STATUS_MODE" ]; then
+  check_mailcow_unit_status "$STATUS_MODE"
+  exit 0
+fi
 
 # Check for available updates
 echo "Checking for available updates..."
@@ -69,6 +140,8 @@ WEBDAV_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/WebDAV-Upload.sh"
 NAS_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/NAS-Upload.sh"
 S3_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/S3-Upload.sh"
 mkdir -p "$CONFIG_DIR"
+
+echo "\nInfo: Du kannst setup.sh mit --status, --status-detailed oder --help aufrufen."
 
 ensure_dependencies() {
   local feature="$1"
@@ -614,3 +687,5 @@ fi
   fi
 
 echo "Setup completed! The systemd timers have been successfully set up."
+
+check_mailcow_unit_status --status
