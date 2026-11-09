@@ -1,4 +1,4 @@
-# mailcow Backup Script V3
+# mailcow Backup Script V3 [![Tests and release](https://github.com/the1andoni/mailcow-backup/actions/workflows/ci-release.yml/badge.svg?branch=main)](https://github.com/the1andoni/mailcow-backup/actions/workflows/ci-release.yml)
 
 [🇬🇧 English](#english) | [🇩🇪 Deutsch](#deutsch)
 
