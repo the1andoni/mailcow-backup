@@ -37,7 +37,6 @@ Push a `v*` tag to run the GitHub Actions test workflow. The GitHub Release is
 created automatically only after the tests pass; do not publish the release
 manually before that workflow succeeds. Pre-release tags (for example `-rc.1`)
 are published as pre-releases.
-
 The workflow checks shell syntax, setup-generated encrypted configurations and
 systemd service/timer files, successful decryption with the right passphrase
 (and rejection of a wrong one), and branch migration rules. It exercises FTP,

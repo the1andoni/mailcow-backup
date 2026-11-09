@@ -31,6 +31,8 @@ echo "PASS: setup help"
 update_help=$(bash update.sh --help)
 [[ "$update_help" == *"--main"* && "$update_help" == *"--v3"* && "$update_help" == *"--v2"* ]] ||
   fail "update.sh help is missing a supported branch option"
+echo "PASS: update help"
+
 if update_error=$(bash update.sh --invalid 2>&1); then
   fail "update.sh accepted an unknown argument"
 fi
