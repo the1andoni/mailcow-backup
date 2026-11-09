@@ -1,0 +1,42 @@
+name: Tests and release
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - V3
+      - V2-LEGACY
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Shell tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run tests
+        run: bash tests/run.sh
+
+  release:
+    name: Publish GitHub release
+    needs: tests
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Create release after tests pass
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          args=(--generate-notes --verify-tag)
+          if [[ "$TAG_NAME" == *-* ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "$TAG_NAME" "${args[@]}"

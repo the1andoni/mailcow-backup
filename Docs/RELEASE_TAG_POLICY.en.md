@@ -30,3 +30,10 @@ Do not use:
 - `v3.*` tags are created on commits from the `V3` branch
 - `v2.*` tags are created on commits from the `V2-LEGACY` branch
 - `main` is the development branch and does not receive stable release tags
+
+## Publishing
+
+Push a `v*` tag to run the GitHub Actions test workflow. The GitHub Release is
+created automatically only after the tests pass; do not publish the release
+manually before that workflow succeeds. Pre-release tags (for example `-rc.1`)
+are published as pre-releases.
