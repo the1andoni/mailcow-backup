@@ -37,3 +37,10 @@ Ein Push eines `v*`-Tags startet den GitHub-Actions-Testworkflow. Das GitHub
 Release wird erst nach erfolgreichen Tests automatisch erstellt; das Release
 darf nicht vorher manuell veröffentlicht werden. Pre-Release-Tags (zum Beispiel
 `-rc.1`) werden als Pre-Releases veröffentlicht.
+
+Der Workflow prüft die Shell-Syntax, die vom Setup erzeugten verschlüsselten
+Konfigurationen sowie systemd-Service- und Timer-Dateien, die Entschlüsselung
+mit dem richtigen Passwort (und die Ablehnung eines falschen Passworts) sowie
+die Migrationsregeln für Branches. FTP, SFTP, WebDAV, NAS und S3 werden mit
+lokalen Kommando-Mocks getestet; es werden keine echten Remote-Dienste
+kontaktiert und keine systemd-Timer des Hosts gestartet.

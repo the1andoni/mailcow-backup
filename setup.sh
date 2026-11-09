@@ -139,6 +139,8 @@ FTP_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/FTP-Upload.sh"
 WEBDAV_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/WebDAV-Upload.sh"
 NAS_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/NAS-Upload.sh"
 S3_UPLOAD_SCRIPT="$SCRIPT_DIR/Upload/S3-Upload.sh"
+GPG_PASS_FILE="${MAILCOW_GPG_PASS_FILE:-/root/.mailcow-gpg-pass}"
+SYSTEMD_UNIT_DIR="${MAILCOW_SYSTEMD_UNIT_DIR:-/etc/systemd/system}"
 mkdir -p "$CONFIG_DIR"
 
 echo "\Info: Du kannst setup.sh mit --status, --status-detailed oder --help aufrufen."
@@ -199,10 +201,10 @@ export GPG_TTY=$(tty) # For GPG agent compatibility
 # Initialize GPG agent
 echo "$gpg_password" | gpg --batch --passphrase-fd 0 --symmetric --cipher-algo AES256 --output /dev/null <<< "Test"
 
-# Save GPG password securely in /root/.mailcow-gpg-pass
-echo "$gpg_password" | sudo tee /root/.mailcow-gpg-pass > /dev/null
-sudo chmod 600 /root/.mailcow-gpg-pass
-echo "GPG password securely saved in /root/.mailcow-gpg-pass."
+# Save GPG password securely
+echo "$gpg_password" | sudo tee "$GPG_PASS_FILE" > /dev/null
+sudo chmod 600 "$GPG_PASS_FILE"
+echo "GPG password securely saved in $GPG_PASS_FILE."
 
 # Check if existing configurations should be overwritten
 if [ -f "$CONFIG_DIR/ftp-config.sh.gpg" ] || [ -f "$CONFIG_DIR/webdav-config.sh.gpg" ] || [ -f "$CONFIG_DIR/nas-config.sh.gpg" ] || [ -f "$CONFIG_DIR/s3-config.sh.gpg" ]; then
@@ -400,7 +402,7 @@ case $frequency in
     ;;
 esac
 
-cat <<EOF | sudo tee /etc/systemd/system/mailcow-backup.service
+cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-backup.service"
 [Unit]
 Description=Mailcow Backup Script
 
@@ -414,7 +416,7 @@ Group=root
 WantedBy=multi-user.target
 EOF
 
-cat <<EOF | sudo tee /etc/systemd/system/mailcow-backup.timer
+cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-backup.timer"
 [Unit]
 Description=Run Mailcow Backup
 
@@ -462,7 +464,7 @@ if [ "$ftp_upload_choice" == "y" ]; then
         ;;
     esac
 
-    cat <<EOF | sudo tee /etc/systemd/system/mailcow-ftp-upload.service
+    cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-ftp-upload.service"
 [Unit]
 Description=Mailcow FTP Upload Script
 
@@ -476,7 +478,7 @@ Group=root
 WantedBy=multi-user.target
 EOF
 
-    cat <<EOF | sudo tee /etc/systemd/system/mailcow-ftp-upload.timer
+    cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-ftp-upload.timer"
 [Unit]
 Description=Run Mailcow FTP Upload
 
@@ -525,7 +527,7 @@ if [[ "$webdav_upload" =~ ^[Yy]$ ]]; then
       ;;
   esac
 
-  cat <<EOF | sudo tee /etc/systemd/system/mailcow-webdav-upload.service
+  cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-webdav-upload.service"
 [Unit]
 Description=Mailcow WebDAV Upload Script
 
@@ -539,7 +541,7 @@ Group=root
 WantedBy=multi-user.target
 EOF
 
-  cat <<EOF | sudo tee /etc/systemd/system/mailcow-webdav-upload.timer
+  cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-webdav-upload.timer"
 [Unit]
 Description=Run Mailcow WebDAV Upload
 
@@ -589,7 +591,7 @@ if [ "$nas_upload_choice" == "y" ]; then
         ;;
     esac
 
-    cat <<EOF | sudo tee /etc/systemd/system/mailcow-nas-upload.service
+    cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-nas-upload.service"
 [Unit]
 Description=Mailcow NAS Upload Script
 
@@ -603,7 +605,7 @@ Group=root
 WantedBy=multi-user.target
 EOF
 
-    cat <<EOF | sudo tee /etc/systemd/system/mailcow-nas-upload.timer
+    cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-nas-upload.timer"
 [Unit]
 Description=Run Mailcow NAS Upload
 
@@ -654,7 +656,7 @@ fi
         ;;
     esac
 
-    cat <<EOF | sudo tee /etc/systemd/system/mailcow-s3-upload.service
+    cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-s3-upload.service"
 [Unit]
 Description=Mailcow S3 Upload Script
 
@@ -668,7 +670,7 @@ Group=root
 WantedBy=multi-user.target
 EOF
 
-    cat <<EOF | sudo tee /etc/systemd/system/mailcow-s3-upload.timer
+    cat <<EOF | sudo tee "$SYSTEMD_UNIT_DIR/mailcow-s3-upload.timer"
 [Unit]
 Description=Run Mailcow S3 Upload
 
