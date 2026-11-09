@@ -18,7 +18,7 @@ done
 # Path resolution
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$SCRIPT_DIR/../Configs"
-GPG_PASS_FILE="/root/.mailcow-gpg-pass"
+GPG_PASS_FILE="${MAILCOW_GPG_PASS_FILE:-/root/.mailcow-gpg-pass}"
 
 # Check if GPG password file exists
 if [ ! -f "$GPG_PASS_FILE" ]; then
@@ -40,7 +40,7 @@ for config in "$CONFIG_DIR"/ftp-config.sh.gpg "$CONFIG_DIR"/webdav-config.sh.gpg
 done
 
 # Variables
-BACKUP_DIR="/backup/mailcow"
+BACKUP_DIR="${MAILCOW_BACKUP_DIR:-/backup/mailcow}"
 MAILCOW_DIR="/opt/mailcow-dockerized"
 MAILCOW_HELPER_SCRIPT="$MAILCOW_DIR/helper-scripts/backup_and_restore.sh"
 TIMESTAMP=$(date +"%Y-%m-%d_%H-%M-%S")
@@ -48,7 +48,8 @@ BACKUP_PATH="$BACKUP_DIR/mailcow-$TIMESTAMP"
 BACKUP_FILE="$BACKUP_DIR/mailcow-backup_$TIMESTAMP.tar.gz"
 
 # Remove old status file
-rm -f /tmp/mailcow-backup.status
+STATUS_FILE="${MAILCOW_STATUS_FILE:-/tmp/mailcow-backup.status}"
+rm -f "$STATUS_FILE"
 
 # Ensure backup directory exists
 mkdir -p "$BACKUP_DIR"
@@ -108,7 +109,7 @@ echo "[✅] Backup successfully created!"
 echo "[+] Backup size: $(du -h "$BACKUP_FILE" | cut -f1)"
 
 # Create status file to signal upload scripts
-touch /tmp/mailcow-backup.status
+touch "$STATUS_FILE"
 
 # Delete old local backups if retention is set
 if [ -n "$LOCAL_RETENTION" ]; then

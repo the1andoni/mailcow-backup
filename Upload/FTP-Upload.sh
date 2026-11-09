@@ -7,7 +7,8 @@ if [ "$EUID" -ne 0 ]; then
 fi
 
 # Ensure backup is completed
-if [ ! -f /tmp/mailcow-backup.status ]; then
+STATUS_FILE="${MAILCOW_STATUS_FILE:-/tmp/mailcow-backup.status}"
+if [ ! -f "$STATUS_FILE" ]; then
   echo "❌ Error: Backup not yet completed!"
   exit 1
 fi
@@ -23,7 +24,7 @@ done
 
 # Decrypt and load configuration file
 CONFIG_DIR="$(dirname "$0")/../Configs"
-GPG_PASS_FILE="/root/.mailcow-gpg-pass"
+GPG_PASS_FILE="${MAILCOW_GPG_PASS_FILE:-/root/.mailcow-gpg-pass}"
 if [ ! -f "$GPG_PASS_FILE" ]; then
   echo "❌ Error: GPG password file $GPG_PASS_FILE not found!"
   exit 1
@@ -46,7 +47,7 @@ if [[ "$FTP_UPLOAD_DIR" != /* ]]; then
 fi
 
 # Variables
-BACKUP_DIR="/backup/mailcow"
+BACKUP_DIR="${MAILCOW_BACKUP_DIR:-/backup/mailcow}"
 LATEST_BACKUP=$(ls -t "$BACKUP_DIR"/*.tar.gz | head -n 1)
 BACKUP_BASENAME=$(basename "$LATEST_BACKUP")
 TARGET_URL="$FTP_PROTOCOL://$FTP_SERVER$FTP_UPLOAD_DIR/$BACKUP_BASENAME"
