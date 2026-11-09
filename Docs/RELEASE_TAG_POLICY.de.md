@@ -30,3 +30,10 @@ Nicht verwenden:
 - `v3.*` Tags werden auf Commits der Branch `V3` gesetzt
 - `v2.*` Tags werden auf Commits der Branch `V2-LEGACY` gesetzt
 - `main` ist Entwicklungs-Branch und bekommt keine stabilen Release-Tags
+
+## Veröffentlichung
+
+Ein Push eines `v*`-Tags startet den GitHub-Actions-Testworkflow. Das GitHub
+Release wird erst nach erfolgreichen Tests automatisch erstellt; das Release
+darf nicht vorher manuell veröffentlicht werden. Pre-Release-Tags (zum Beispiel
+`-rc.1`) werden als Pre-Releases veröffentlicht.
